@@ -1,0 +1,9 @@
+[package]
+name = "klaptik"
+description = "render my tile"
+authors = ["Vitaly Domnikov <oss@vitaly.codes>"]
+edition = "2018"
+license = "MIT/Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/dotcypress/klaptik"
+version = "0.0.0"
