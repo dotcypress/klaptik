@@ -1,11 +1,3 @@
-#[derive(Clone, Copy)]
-pub enum Direction {
-  Left2Right,
-  Right2Left,
-  Top2Bottom,
-  Bottom2Top,
-}
-
 #[derive(Clone, Copy, Default)]
 pub struct Point(pub u16, pub u16);
 

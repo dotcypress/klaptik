@@ -1,7 +1,8 @@
 use crate::*;
+use core::marker::PhantomData;
 
 pub trait Canvas {
-  fn draw(&mut self, bounds: &Rect, buffer: &[u8]);
+  fn draw(&mut self, bounds: Rect, buffer: &[u8]);
 }
 
 pub trait Widget<S> {
@@ -10,13 +11,13 @@ pub trait Widget<S> {
   fn invalidate(&mut self);
 }
 
-pub struct ClearWidget {
+pub struct Background {
   bpp: u16,
   bounds: Rect,
   render_req: bool,
 }
 
-impl ClearWidget {
+impl Background {
   pub fn new<P: Into<Point>, S: Into<Size>>(origin: P, size: S, bpp: u16) -> Self {
     Self {
       bounds: Rect(origin.into(), size.into()),
@@ -26,7 +27,7 @@ impl ClearWidget {
   }
 }
 
-impl Widget<()> for ClearWidget {
+impl Widget<()> for Background {
   fn set_state(&mut self, _: ()) {}
 
   fn invalidate(&mut self) {
@@ -52,7 +53,7 @@ impl Widget<()> for ClearWidget {
         while tile_len > 0 {
           let chunk_size = u16::min(32, tile_len);
           tile_len -= chunk_size;
-          canvas.draw(&Rect(origin, tile), &[0; 32][..chunk_size as usize])
+          canvas.draw(Rect(origin, tile), &[0; 32][..chunk_size as usize])
         }
       }
     }
@@ -60,14 +61,14 @@ impl Widget<()> for ClearWidget {
 }
 
 #[derive(Clone, Copy)]
-pub struct SpriteWidget<S> {
+pub struct Icon<S> {
   sprite: S,
   state: Glyph,
   origin: Point,
   render_req: bool,
 }
 
-impl<S: Sprite + Copy> SpriteWidget<S> {
+impl<S: Sprite + Copy> Icon<S> {
   pub fn new<P: Into<Point>>(origin: P, sprite: S, state: Glyph) -> Self {
     Self {
       sprite,
@@ -78,7 +79,7 @@ impl<S: Sprite + Copy> SpriteWidget<S> {
   }
 }
 
-impl<S: Sprite> Widget<Glyph> for SpriteWidget<S> {
+impl<S: Sprite> Widget<Glyph> for Icon<S> {
   fn invalidate(&mut self) {
     self.render_req = true;
   }
@@ -93,28 +94,32 @@ impl<S: Sprite> Widget<Glyph> for SpriteWidget<S> {
   fn render<C: Canvas>(&mut self, canvas: &mut C) {
     if self.render_req {
       if let Some(sprite) = self.sprite.render(self.state) {
-        canvas.draw(&Rect(self.origin, self.sprite.size()), sprite);
+        canvas.draw(Rect(self.origin, self.sprite.size()), sprite);
       }
       self.render_req = false;
     }
   }
 }
 
-pub struct ChainWidget<S: Sprite, const SIZE: usize> {
-  sprite: S,
-  origin: Point,
-  dir: Direction,
-  state: [u8; SIZE],
-  render_req: [bool; SIZE],
-  cursor: u8,
+pub trait Layout {
+  fn layout(node_idx: usize, origin: Point, glyph_size: Size) -> Rect;
 }
 
-impl<S: Sprite + Copy, const SIZE: usize> ChainWidget<S, SIZE> {
-  pub fn new<P: Into<Point>>(origin: P, sprite: S, val: &str, dir: Direction) -> Self {
+pub struct Grid<S: Sprite, L: Layout, const SIZE: usize> {
+  layout: PhantomData<L>,
+  sprite: S,
+  origin: Point,
+  state: [Glyph; SIZE],
+  render_req: [bool; SIZE],
+  cursor: usize,
+}
+
+impl<S: Sprite + Copy, L: Layout, const SIZE: usize> Grid<S, L, SIZE> {
+  pub fn new<P: Into<Point>>(origin: P, sprite: S, val: &str) -> Self {
     let state = val.as_bytes();
     assert!(state.len() <= SIZE);
     let glyph = sprite.glyph(0);
-    let mut state: [u8; SIZE] = [glyph; SIZE];
+    let mut state: [Glyph; SIZE] = [glyph; SIZE];
     let mut render_req: [bool; SIZE] = [false; SIZE];
 
     for (idx, sym) in val.bytes().enumerate() {
@@ -123,18 +128,27 @@ impl<S: Sprite + Copy, const SIZE: usize> ChainWidget<S, SIZE> {
     }
 
     Self {
-      dir,
       sprite,
       state,
       render_req,
       cursor: 0,
       origin: origin.into(),
+      layout: PhantomData {},
     }
   }
 }
 
-impl<S: Sprite, const SIZE: usize> Widget<&[u8; SIZE]> for ChainWidget<S, SIZE> {
-  fn set_state(&mut self, state: &[u8; SIZE]) {
+impl<S: Sprite, L: Layout, const SIZE: usize> Grid<S, L, SIZE> {
+  pub fn set_glyph(&mut self, idx: usize, glyph: Glyph) {
+    if self.state[idx] != glyph {
+      self.state[idx] = glyph;
+      self.render_req[idx] = true;
+    }
+  }
+}
+
+impl<S: Sprite, L: Layout, const SIZE: usize> Widget<&[Glyph; SIZE]> for Grid<S, L, SIZE> {
+  fn set_state(&mut self, state: &[Glyph; SIZE]) {
     for (idx, sym) in state.iter().enumerate() {
       if self.state[idx] != *sym {
         self.state[idx] = *sym;
@@ -152,37 +166,22 @@ impl<S: Sprite, const SIZE: usize> Widget<&[u8; SIZE]> for ChainWidget<S, SIZE> 
 
   fn render<C: Canvas>(&mut self, canvas: &mut C) {
     let glyph_size = self.sprite.size();
-    let mut x = self.origin.x();
-    let mut y = self.origin.y();
     for (idx, render_req) in self.render_req.iter_mut().enumerate() {
       if *render_req {
         let glyph = self.state[idx];
         if let Some(buf) = self.sprite.render(glyph) {
-          canvas.draw(&Rect(Point(x, y), glyph_size), buf);
+          let bounds = L::layout(idx, self.origin, glyph_size);
+          canvas.draw(bounds, buf);
         }
         *render_req = false;
-      }
-      match self.dir {
-        Direction::Left2Right => {
-          x += glyph_size.width();
-        }
-        Direction::Right2Left => {
-          x -= glyph_size.width();
-        }
-        Direction::Top2Bottom => {
-          y += glyph_size.height();
-        }
-        Direction::Bottom2Top => {
-          y -= glyph_size.height();
-        }
       }
     }
   }
 }
 
-impl<S: Sprite, const SIZE: usize> core::fmt::Write for ChainWidget<S, SIZE> {
+impl<S: Sprite, L: Layout, const SIZE: usize> core::fmt::Write for Grid<S, L, SIZE> {
   fn write_str(&mut self, s: &str) -> core::fmt::Result {
-    let mut cursor = self.cursor as usize;
+    let mut cursor = self.cursor;
     for byte in s.as_bytes() {
       if self.state[cursor] != *byte {
         self.state[cursor] = *byte;
@@ -193,35 +192,51 @@ impl<S: Sprite, const SIZE: usize> core::fmt::Write for ChainWidget<S, SIZE> {
         cursor = 0;
       }
     }
-    self.cursor = cursor as u8;
+    self.cursor = cursor;
     Ok(())
   }
 }
 
-pub struct LabelWidget<S: Sprite, const SIZE: usize>(ChainWidget<S, SIZE>);
+#[derive(PartialEq, Eq)]
+pub enum LayoutDirection {
+  Horizontal,
+  Vertical,
+}
 
-impl<S: Sprite + Copy, const SIZE: usize> LabelWidget<S, SIZE> {
-  pub fn new<P: Into<Point>>(origin: P, font: S, val: &str) -> Self {
-    Self(ChainWidget::new(origin, font, val, Direction::Left2Right))
+pub const NO_WRAP: u16 = u16::MAX;
+pub const DIR_LTR: usize = 0;
+pub const DIR_RTL: usize = 1;
+pub const DIR_DOWN: usize = 2;
+pub const DIR_UP: usize = 3;
+
+pub struct GridLayout<const DIR: usize, const WRAP: u16>(LayoutDirection);
+
+impl<const DIR: usize, const WRAP: u16> Layout for GridLayout<DIR, WRAP> {
+  fn layout(node_idx: usize, origin: Point, glyph_size: Size) -> Rect {
+    let idx = node_idx as u16 % WRAP;
+    let wraps = node_idx as u16 / WRAP;
+    let new_origin = match DIR {
+      DIR_UP => Point(
+        origin.x() + glyph_size.width() * wraps,
+        origin.y() - glyph_size.height() * (idx + 1),
+      ),
+      DIR_DOWN => Point(
+        origin.x() + glyph_size.width() * wraps,
+        origin.y() + glyph_size.height() * idx,
+      ),
+      DIR_RTL => Point(
+        origin.x() - glyph_size.width() * (idx + 1),
+        origin.y() + glyph_size.height() * wraps,
+      ),
+      _ => Point(
+        origin.x() + glyph_size.width() * idx,
+        origin.y() + glyph_size.height() * wraps,
+      ),
+    };
+    Rect(new_origin, glyph_size)
   }
 }
 
-impl<S: Sprite, const SIZE: usize> Widget<&[u8; SIZE]> for LabelWidget<S, SIZE> {
-  fn set_state(&mut self, state: &[u8; SIZE]) {
-    self.0.set_state(state);
-  }
-
-  fn invalidate(&mut self) {
-    self.0.invalidate();
-  }
-
-  fn render<C: Canvas>(&mut self, canvas: &mut C) {
-    self.0.render(canvas);
-  }
-}
-
-impl<S: Sprite, const SIZE: usize> core::fmt::Write for LabelWidget<S, SIZE> {
-  fn write_str(&mut self, s: &str) -> core::fmt::Result {
-    self.0.write_str(s)
-  }
-}
+pub type Label<S, const SIZE: usize> = Grid<S, GridLayout<DIR_LTR, NO_WRAP>, SIZE>;
+pub type VerticalLabel<S, const SIZE: usize> = Grid<S, GridLayout<DIR_DOWN, NO_WRAP>, SIZE>;
+pub type TextBox<S, const SIZE: usize, const WRAP: u16> = Grid<S, GridLayout<DIR_LTR, WRAP>, SIZE>;
