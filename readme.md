@@ -1,6 +1,6 @@
 # klaptik
 
-🧩 Experimental UI rendrering framework for `no_std` targets.
+🧩 Experimental UI rendering framework for `no_std` targets.
 
 ## License
 

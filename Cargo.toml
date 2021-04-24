@@ -1,6 +1,6 @@
 [package]
 name = "klaptik"
-description = "render my tile"
+description = "Experimental UI rendering framework for `no_std` targets"
 authors = ["Vitaly Domnikov <oss@vitaly.codes>"]
 edition = "2018"
 license = "MIT/Apache-2.0"
