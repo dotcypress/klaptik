@@ -40,13 +40,14 @@ impl Widget<()> for Background {
     }
     self.render_req = false;
 
-    let bounds = self.bounds;
-    for x in (bounds.origin().x()..bounds.size().width()).step_by(16) {
-      for y in (bounds.origin().y()..bounds.size().height()).step_by(16) {
+    let origin = self.bounds.origin();
+    let size = self.bounds.size();
+    for x in (origin.x()..size.width()).step_by(16) {
+      for y in (origin.y()..size.height()).step_by(16) {
         let origin = Point(x, y);
         let tile = Size(
-          u16::min(16, bounds.size().width() - x),
-          u16::min(16, bounds.size().height() - y),
+          u16::min(16, size.width() - x),
+          u16::min(16, size.height() - y),
         );
 
         let mut tile_len = tile.width() * tile.height() * self.bpp / 8;
@@ -94,7 +95,7 @@ impl<S: Sprite> Widget<Glyph> for Icon<S> {
   fn render<C: Canvas>(&mut self, canvas: &mut C) {
     if self.render_req {
       if let Some(sprite) = self.sprite.render(self.state) {
-        canvas.draw(Rect(self.origin, self.sprite.size()), sprite);
+        canvas.draw(Rect(self.origin, self.sprite.glyph_size()), sprite);
       }
       self.render_req = false;
     }
@@ -118,7 +119,7 @@ impl<S: Sprite + Copy, L: Layout, const SIZE: usize> Grid<S, L, SIZE> {
   pub fn new<P: Into<Point>>(origin: P, sprite: S, val: &str) -> Self {
     let state = val.as_bytes();
     assert!(state.len() <= SIZE);
-    let glyph = sprite.glyph(0);
+    let glyph = sprite.glyphs()[0];
     let mut state: [Glyph; SIZE] = [glyph; SIZE];
     let mut render_req: [bool; SIZE] = [false; SIZE];
 
@@ -165,7 +166,7 @@ impl<S: Sprite, L: Layout, const SIZE: usize> Widget<&[Glyph; SIZE]> for Grid<S,
   }
 
   fn render<C: Canvas>(&mut self, canvas: &mut C) {
-    let glyph_size = self.sprite.size();
+    let glyph_size = self.sprite.glyph_size();
     for (idx, render_req) in self.render_req.iter_mut().enumerate() {
       if *render_req {
         let glyph = self.state[idx];

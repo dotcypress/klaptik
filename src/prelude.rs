@@ -1,4 +1,4 @@
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Eq, PartialEq, Default)]
 pub struct Point(pub u16, pub u16);
 
 impl Point {
@@ -17,7 +17,7 @@ impl From<(u16, u16)> for Point {
   }
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Eq, PartialEq, Default)]
 pub struct Size(pub u16, pub u16);
 
 impl Size {
@@ -36,7 +36,7 @@ impl From<(u16, u16)> for Size {
   }
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Eq, PartialEq, Default)]
 pub struct Rect(pub Point, pub Size);
 
 impl Rect {  

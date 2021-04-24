@@ -3,8 +3,8 @@ use crate::*;
 pub type Glyph = u8;
 
 pub trait Sprite {
-  fn size(&self) -> Size;
-  fn glyph(&self, idx: usize) -> Glyph;
+  fn glyph_size(&self) -> Size;
+  fn glyphs(&self) -> &[Glyph];
   fn render(&self, glyph: Glyph) -> Option<&[u8]>;
 }
 
@@ -26,12 +26,12 @@ impl RomSprite {
 }
 
 impl Sprite for RomSprite {
-  fn size(&self) -> Size {
+  fn glyph_size(&self) -> Size {
     self.glyph_size
   }
 
-  fn glyph(&self, idx: usize) -> Glyph {
-    self.glyphs.as_bytes()[idx]
+  fn glyphs(&self) -> &[Glyph] {
+    self.glyphs.as_bytes()
   }
 
   fn render(&self, glyph: Glyph) -> Option<&'static [u8]> {
