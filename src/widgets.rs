@@ -2,7 +2,7 @@ use crate::*;
 use core::marker::PhantomData;
 
 pub trait Canvas {
-    fn draw(&mut self, bounds: Rect, buffer: &[u8]);
+    fn draw(&mut self, bounds: Rect, buf: &[u8]);
 }
 
 pub trait Widget<S> {
@@ -109,8 +109,8 @@ pub trait Layout {
 pub struct Grid<S: Sprite, L: Layout, const SIZE: usize> {
     layout: PhantomData<L>,
     sprite: S,
-    origin: Point,
     state: [Glyph; SIZE],
+    bounds: [Rect; SIZE],
     render_req: [bool; SIZE],
     cursor: usize,
 }
@@ -128,12 +128,19 @@ impl<S: Sprite + Copy, L: Layout, const SIZE: usize> Grid<S, L, SIZE> {
             render_req[idx] = true;
         }
 
+        let mut bounds: [Rect; SIZE] = [Rect::default(); SIZE];
+        let origin = origin.into();
+        let glyph_size = sprite.glyph_size();
+        for (idx, rect) in bounds.iter_mut().enumerate() {
+            *rect = L::layout(idx, origin, glyph_size);
+        }
+
         Self {
+            bounds,
             sprite,
             state,
             render_req,
             cursor: 0,
-            origin: origin.into(),
             layout: PhantomData {},
         }
     }
@@ -166,13 +173,11 @@ impl<S: Sprite, L: Layout, const SIZE: usize> Widget<&[Glyph; SIZE]> for Grid<S,
     }
 
     fn render<C: Canvas>(&mut self, canvas: &mut C) {
-        let glyph_size = self.sprite.glyph_size();
         for (idx, render_req) in self.render_req.iter_mut().enumerate() {
             if *render_req {
                 let glyph = self.state[idx];
                 if let Some(buf) = self.sprite.render(glyph) {
-                    let bounds = L::layout(idx, self.origin, glyph_size);
-                    canvas.draw(bounds, buf);
+                    canvas.draw(self.bounds[idx], buf);
                 }
                 *render_req = false;
             }
@@ -198,46 +203,39 @@ impl<S: Sprite, L: Layout, const SIZE: usize> core::fmt::Write for Grid<S, L, SI
     }
 }
 
-#[derive(PartialEq, Eq)]
-pub enum LayoutDirection {
-    Horizontal,
-    Vertical,
-}
-
-pub const NO_WRAP: u16 = u16::MAX;
-pub const DIR_LTR: usize = 0;
-pub const DIR_RTL: usize = 1;
-pub const DIR_DOWN: usize = 2;
-pub const DIR_UP: usize = 3;
-
 pub struct GridLayout<const DIR: usize, const WRAP: u16>;
 
+const DIR_LTR: usize = 0;
+const DIR_RTL: usize = 1;
+const DIR_DOWN: usize = 2;
+const DIR_UP: usize = 3;
+
 impl<const DIR: usize, const WRAP: u16> Layout for GridLayout<DIR, WRAP> {
-    fn layout(node_idx: usize, origin: Point, glyph_size: Size) -> Rect {
+    fn layout(node_idx: usize, origin: Point, size: Size) -> Rect {
         let idx = node_idx as u16 % WRAP;
         let wraps = node_idx as u16 / WRAP;
         let new_origin = match DIR {
             DIR_UP => Point(
-                origin.x() + glyph_size.width() * wraps,
-                origin.y() - glyph_size.height() * (idx + 1),
+                origin.x() + size.width() * wraps,
+                origin.y() - size.height() * (idx + 1),
             ),
             DIR_DOWN => Point(
-                origin.x() + glyph_size.width() * wraps,
-                origin.y() + glyph_size.height() * idx,
+                origin.x() + size.width() * wraps,
+                origin.y() + size.height() * idx,
             ),
             DIR_RTL => Point(
-                origin.x() - glyph_size.width() * (idx + 1),
-                origin.y() + glyph_size.height() * wraps,
+                origin.x() - size.width() * (idx + 1),
+                origin.y() + size.height() * wraps,
             ),
             _ => Point(
-                origin.x() + glyph_size.width() * idx,
-                origin.y() + glyph_size.height() * wraps,
+                origin.x() + size.width() * idx,
+                origin.y() + size.height() * wraps,
             ),
         };
-        Rect(new_origin, glyph_size)
+        Rect(new_origin, size)
     }
 }
 
-pub type Label<S, const SIZE: usize> = Grid<S, GridLayout<DIR_LTR, NO_WRAP>, SIZE>;
-pub type VerticalLabel<S, const SIZE: usize> = Grid<S, GridLayout<DIR_DOWN, NO_WRAP>, SIZE>;
+pub type Label<S, const SIZE: usize> = Grid<S, GridLayout<DIR_LTR, { u16::MAX }>, SIZE>;
+pub type VerticalLabel<S, const SIZE: usize> = Grid<S, GridLayout<DIR_DOWN, { u16::MAX }>, SIZE>;
 pub type TextBox<S, const SIZE: usize, const WRAP: u16> = Grid<S, GridLayout<DIR_LTR, WRAP>, SIZE>;
