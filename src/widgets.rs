@@ -42,9 +42,9 @@ impl Widget<()> for Background {
 
         let origin = self.bounds.origin();
         let size = self.bounds.size();
-        for x in (origin.x()..size.width()).step_by(16) {
-            for y in (origin.y()..size.height()).step_by(16) {
-                let origin = Point(x, y);
+        for x in (0..size.width()).step_by(16) {
+            for y in (0..size.height()).step_by(16) {
+                let offset = Point(x + origin.x(), y + origin.y());
                 let tile = Size(
                     u16::min(16, size.width() - x),
                     u16::min(16, size.height() - y),
@@ -54,7 +54,7 @@ impl Widget<()> for Background {
                 while tile_len > 0 {
                     let chunk_size = u16::min(32, tile_len);
                     tile_len -= chunk_size;
-                    canvas.draw(Rect(origin, tile), &[0; 32][..chunk_size as usize])
+                    canvas.draw(Rect(offset, tile), &[0; 32][..chunk_size as usize])
                 }
             }
         }
