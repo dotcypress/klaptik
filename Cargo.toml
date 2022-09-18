@@ -9,4 +9,8 @@ repository = "https://github.com/dotcypress/klaptik"
 version = "0.0.3"
 
 [dependencies]
-paste = "1.0.5"
+paste = "1.0.9"
+
+[dependencies.embedded-hal]
+features = ["unproven"]
+version = "0.2.6"

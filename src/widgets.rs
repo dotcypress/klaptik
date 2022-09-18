@@ -1,10 +1,6 @@
 use crate::*;
 use core::marker::PhantomData;
 
-pub trait Canvas {
-    fn draw(&mut self, bounds: Rect, buf: &[u8]);
-}
-
 pub trait Widget<S> {
     fn set_state(&mut self, state: S);
     fn render<C: Canvas>(&mut self, canvas: &mut C);
@@ -42,12 +38,12 @@ impl Widget<()> for Background {
 
         let origin = self.bounds.origin();
         let size = self.bounds.size();
-        for x in (0..size.width()).step_by(16) {
-            for y in (0..size.height()).step_by(16) {
+        for x in (0..size.width()).step_by(8) {
+            for y in (0..size.height()).step_by(8) {
                 let offset = Point(x + origin.x(), y + origin.y());
                 let tile = Size(
-                    u16::min(16, size.width() - x),
-                    u16::min(16, size.height() - y),
+                    u16::min(8, size.width() - x),
+                    u16::min(8, size.height() - y),
                 );
 
                 let mut tile_len = tile.width() * tile.height() * self.bpp / 8;
