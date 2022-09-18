@@ -17,14 +17,14 @@ impl OutputPin for NoCS {
 }
 
 pub enum Error<SPI: spi::Write<u8>> {
-    GPIOError,
+    PinError,
     WriteError(<SPI as spi::Write<u8>>::Error),
 }
 
 impl<SPI: spi::Write<u8>> core::fmt::Debug for Error<SPI> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Self::GPIOError => write!(f, "GPIO Error"),
+            Self::PinError => write!(f, "GPIO Error"),
             Self::WriteError(_) => write!(f, "SPI Write Error"),
         }
     }
@@ -60,14 +60,14 @@ where
         cmd: bool,
         tx: TX,
     ) -> Result<RES, Error<SPI>> {
-        self.ce.set_low().map_err(|_| Error::GPIOError)?;
+        self.ce.set_low().map_err(|_| Error::PinError)?;
         if cmd {
-            self.dc.set_high().map_err(|_| Error::GPIOError)?;
+            self.dc.set_high().map_err(|_| Error::PinError)?;
         } else {
-            self.dc.set_low().map_err(|_| Error::GPIOError)?;
+            self.dc.set_low().map_err(|_| Error::PinError)?;
         }
         let res = tx(&mut self.spi).map_err(Error::WriteError);
-        self.ce.set_high().map_err(|_| Error::GPIOError).and(res)
+        self.ce.set_high().map_err(|_| Error::PinError).and(res)
     }
 
     pub fn command<RES, TX: FnOnce(&mut SPI) -> Result<RES, <SPI as spi::Write<u8>>::Error>>(
