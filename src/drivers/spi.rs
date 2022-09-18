@@ -45,7 +45,7 @@ impl<SPI: spi::Write<u8>> core::fmt::Debug for Error<SPI> {
     }
 }
 
-pub struct SpiDisplay<SPI, CS, DC>
+pub struct SpiLink<SPI, CS, DC>
 where
     SPI: spi::Write<u8>,
     CS: OutputPin,
@@ -56,7 +56,7 @@ where
     dc: DC,
 }
 
-impl<SPI, CS, DC> SpiDisplay<SPI, CS, DC>
+impl<SPI, CS, DC> SpiLink<SPI, CS, DC>
 where
     SPI: spi::Write<u8>,
     CS: OutputPin,
@@ -70,32 +70,28 @@ where
         (self.spi, self.cs, self.dc)
     }
 
-    pub fn tx<RES, TX: FnOnce(&mut SPI) -> Result<RES, <SPI as spi::Write<u8>>::Error>>(
-        &mut self,
-        cmd: bool,
-        tx: TX,
-    ) -> Result<RES, Error<SPI>> {
-        self.cs.set_low().map_err(|_| Error::PinError)?;
-        if cmd {
-            self.dc.set_high().map_err(|_| Error::PinError)?;
-        } else {
-            self.dc.set_low().map_err(|_| Error::PinError)?;
-        }
-        let res = tx(&mut self.spi).map_err(Error::WriteError);
-        self.cs.set_high().map_err(|_| Error::PinError).and(res)
-    }
-
     pub fn command<RES, TX: FnOnce(&mut SPI) -> Result<RES, <SPI as spi::Write<u8>>::Error>>(
         &mut self,
         tx: TX,
     ) -> Result<RES, Error<SPI>> {
-        self.tx(true, tx)
+        self.dc.set_low().map_err(|_| Error::PinError)?;
+        self.tx(tx)
     }
 
     pub fn data<RES, TX: FnOnce(&mut SPI) -> Result<RES, <SPI as spi::Write<u8>>::Error>>(
         &mut self,
         tx: TX,
     ) -> Result<RES, Error<SPI>> {
-        self.tx(false, tx)
+        self.dc.set_high().map_err(|_| Error::PinError)?;
+        self.tx(tx)
+    }
+
+    fn tx<RES, TX: FnOnce(&mut SPI) -> Result<RES, <SPI as spi::Write<u8>>::Error>>(
+        &mut self,
+        tx: TX,
+    ) -> Result<RES, Error<SPI>> {
+        self.cs.set_low().map_err(|_| Error::PinError)?;
+        let res = tx(&mut self.spi).map_err(Error::WriteError);
+        self.cs.set_high().map_err(|_| Error::PinError).and(res)
     }
 }
