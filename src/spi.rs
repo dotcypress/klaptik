@@ -1,10 +1,25 @@
 use core::convert::Infallible;
+
 use embedded_hal::blocking::spi;
 use embedded_hal::digital::v2::*;
 
 pub struct NoCS;
 
 impl OutputPin for NoCS {
+    type Error = Infallible;
+
+    fn set_low(&mut self) -> Result<(), Self::Error> {
+        Ok(())
+    }
+
+    fn set_high(&mut self) -> Result<(), Self::Error> {
+        Ok(())
+    }
+}
+
+pub struct NoDC;
+
+impl OutputPin for NoDC {
     type Error = Infallible;
 
     fn set_low(&mut self) -> Result<(), Self::Error> {
@@ -30,29 +45,29 @@ impl<SPI: spi::Write<u8>> core::fmt::Debug for Error<SPI> {
     }
 }
 
-pub struct SpiDisplay<SPI, CE, DC>
+pub struct SpiDisplay<SPI, CS, DC>
 where
     SPI: spi::Write<u8>,
-    CE: OutputPin,
+    CS: OutputPin,
     DC: OutputPin,
 {
     spi: SPI,
-    ce: CE,
+    cs: CS,
     dc: DC,
 }
 
-impl<SPI, CE, DC> SpiDisplay<SPI, CE, DC>
+impl<SPI, CS, DC> SpiDisplay<SPI, CS, DC>
 where
     SPI: spi::Write<u8>,
-    CE: OutputPin,
+    CS: OutputPin,
     DC: OutputPin,
 {
-    pub fn new(spi: SPI, ce: CE, dc: DC) -> Self {
-        Self { spi, ce, dc }
+    pub fn new(spi: SPI, cs: CS, dc: DC) -> Self {
+        Self { spi, cs, dc }
     }
 
-    pub fn release(self) -> (SPI, CE, DC) {
-        (self.spi, self.ce, self.dc)
+    pub fn release(self) -> (SPI, CS, DC) {
+        (self.spi, self.cs, self.dc)
     }
 
     pub fn tx<RES, TX: FnOnce(&mut SPI) -> Result<RES, <SPI as spi::Write<u8>>::Error>>(
@@ -60,14 +75,14 @@ where
         cmd: bool,
         tx: TX,
     ) -> Result<RES, Error<SPI>> {
-        self.ce.set_low().map_err(|_| Error::PinError)?;
+        self.cs.set_low().map_err(|_| Error::PinError)?;
         if cmd {
             self.dc.set_high().map_err(|_| Error::PinError)?;
         } else {
             self.dc.set_low().map_err(|_| Error::PinError)?;
         }
         let res = tx(&mut self.spi).map_err(Error::WriteError);
-        self.ce.set_high().map_err(|_| Error::PinError).and(res)
+        self.cs.set_high().map_err(|_| Error::PinError).and(res)
     }
 
     pub fn command<RES, TX: FnOnce(&mut SPI) -> Result<RES, <SPI as spi::Write<u8>>::Error>>(
