@@ -70,7 +70,7 @@ where
         self.ce.set_high().map_err(|_| Error::PinError).and(res)
     }
 
-    pub fn cmd<RES, TX: FnOnce(&mut SPI) -> Result<RES, <SPI as spi::Write<u8>>::Error>>(
+    pub fn command<RES, TX: FnOnce(&mut SPI) -> Result<RES, <SPI as spi::Write<u8>>::Error>>(
         &mut self,
         tx: TX,
     ) -> Result<RES, Error<SPI>> {
