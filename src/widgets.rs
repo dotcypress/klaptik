@@ -2,29 +2,27 @@ use crate::*;
 use core::marker::PhantomData;
 
 pub trait Widget<S> {
-    fn set_state(&mut self, state: S);
-    fn render<C: Canvas>(&mut self, canvas: &mut C);
     fn invalidate(&mut self);
+    fn update(&mut self, state: S);
+    fn render<C: Canvas>(&mut self, canvas: &mut C);
 }
 
 pub struct Background {
-    bpp: u16,
     bounds: Rect,
     render_req: bool,
 }
 
 impl Background {
-    pub fn new<P: Into<Point>, S: Into<Size>>(origin: P, size: S, bpp: u16) -> Self {
+    pub fn new<R: Into<Rect>>(bounds: R) -> Self {
         Self {
-            bounds: Rect(origin.into(), size.into()),
+            bounds: bounds.into(),
             render_req: true,
-            bpp,
         }
     }
 }
 
 impl Widget<()> for Background {
-    fn set_state(&mut self, _: ()) {}
+    fn update(&mut self, _: ()) {}
 
     fn invalidate(&mut self) {
         self.render_req = true;
@@ -46,7 +44,7 @@ impl Widget<()> for Background {
                     u16::min(8, size.height() - y),
                 );
 
-                let mut tile_len = tile.width() * tile.height() * self.bpp / 8;
+                let mut tile_len = tile.width() * tile.height() >> 3;
                 while tile_len > 0 {
                     let chunk_size = u16::min(32, tile_len);
                     tile_len -= chunk_size;
@@ -66,7 +64,7 @@ pub struct Icon<S> {
 }
 
 impl<S: Sprite + Copy> Icon<S> {
-    pub fn new<P: Into<Point>>(origin: P, sprite: S, state: Glyph) -> Self {
+    pub fn new<P: Into<Point>>(sprite: S, state: Glyph, origin: P) -> Self {
         Self {
             sprite,
             state,
@@ -81,7 +79,7 @@ impl<S: Sprite> Widget<Glyph> for Icon<S> {
         self.render_req = true;
     }
 
-    fn set_state(&mut self, state: Glyph) {
+    fn update(&mut self, state: Glyph) {
         if self.state != state {
             self.state = state;
             self.render_req = true;
@@ -90,31 +88,31 @@ impl<S: Sprite> Widget<Glyph> for Icon<S> {
 
     fn render<C: Canvas>(&mut self, canvas: &mut C) {
         if self.render_req {
-            if let Some(sprite) = self.sprite.render(self.state) {
-                canvas.draw(Rect(self.origin, self.sprite.glyph_size()), sprite);
-            }
+            self.sprite.render(self.state, self.origin, canvas);
             self.render_req = false;
         }
     }
 }
 
+pub type SpriteIcon = Icon<RomSprite>;
+
 pub trait Layout {
-    fn layout(node_idx: usize, origin: Point, glyph_size: Size) -> Rect;
+    fn layout(node_idx: usize, origin: Point, glyph_size: Size) -> Point;
 }
 
-pub struct Grid<S: Sprite, L: Layout, const SIZE: usize> {
+pub struct Grid<S: Sprite, L: Layout, const SIZE: usize, const SW: usize, const SH: usize> {
     layout: PhantomData<L>,
     sprite: S,
     state: [Glyph; SIZE],
-    bounds: [Rect; SIZE],
+    origins: [Point; SIZE],
     render_req: [bool; SIZE],
     cursor: usize,
 }
 
-impl<S: Sprite + Copy, L: Layout, const SIZE: usize> Grid<S, L, SIZE> {
-    pub fn new<P: Into<Point>>(origin: P, sprite: S, val: &str) -> Self {
-        let state = val.as_bytes();
-        assert!(state.len() <= SIZE);
+impl<S: Sprite + Copy, L: Layout, const SIZE: usize, const SW: usize, const SH: usize>
+    Grid<S, L, SIZE, SW, SH>
+{
+    pub fn new<P: Into<Point>>(sprite: S, val: &str, origin: P) -> Self {
         let glyph = sprite.glyphs()[0];
         let mut state: [Glyph; SIZE] = [glyph; SIZE];
         let mut render_req: [bool; SIZE] = [false; SIZE];
@@ -124,15 +122,15 @@ impl<S: Sprite + Copy, L: Layout, const SIZE: usize> Grid<S, L, SIZE> {
             render_req[idx] = true;
         }
 
-        let mut bounds: [Rect; SIZE] = [Rect::default(); SIZE];
-        let origin = origin.into();
-        let glyph_size = sprite.glyph_size();
-        for (idx, rect) in bounds.iter_mut().enumerate() {
-            *rect = L::layout(idx, origin, glyph_size);
+        let mut origins: [Point; SIZE] = [Point::default(); SIZE];
+        let pos = origin.into();
+        let size = Size(SW as _, SH as _);
+        for (idx, origin) in origins.iter_mut().enumerate() {
+            *origin = L::layout(idx, pos, size);
         }
 
         Self {
-            bounds,
+            origins,
             sprite,
             state,
             render_req,
@@ -142,7 +140,9 @@ impl<S: Sprite + Copy, L: Layout, const SIZE: usize> Grid<S, L, SIZE> {
     }
 }
 
-impl<S: Sprite, L: Layout, const SIZE: usize> Grid<S, L, SIZE> {
+impl<S: Sprite, L: Layout, const SIZE: usize, const SW: usize, const SH: usize>
+    Grid<S, L, SIZE, SW, SH>
+{
     pub fn set_glyph(&mut self, idx: usize, glyph: Glyph) {
         if self.state[idx] != glyph {
             self.state[idx] = glyph;
@@ -151,8 +151,10 @@ impl<S: Sprite, L: Layout, const SIZE: usize> Grid<S, L, SIZE> {
     }
 }
 
-impl<S: Sprite, L: Layout, const SIZE: usize> Widget<&[Glyph; SIZE]> for Grid<S, L, SIZE> {
-    fn set_state(&mut self, state: &[Glyph; SIZE]) {
+impl<S: Sprite, L: Layout, const SIZE: usize, const SW: usize, const SH: usize>
+    Widget<&[Glyph; SIZE]> for Grid<S, L, SIZE, SW, SH>
+{
+    fn update(&mut self, state: &[Glyph; SIZE]) {
         for (idx, glyph) in state.iter().enumerate() {
             if self.state[idx] != *glyph {
                 self.state[idx] = *glyph;
@@ -172,16 +174,16 @@ impl<S: Sprite, L: Layout, const SIZE: usize> Widget<&[Glyph; SIZE]> for Grid<S,
         for (idx, render_req) in self.render_req.iter_mut().enumerate() {
             if *render_req {
                 let glyph = self.state[idx];
-                if let Some(buf) = self.sprite.render(glyph) {
-                    canvas.draw(self.bounds[idx], buf);
-                }
+                self.sprite.render(glyph, self.origins[idx], canvas);
                 *render_req = false;
             }
         }
     }
 }
 
-impl<S: Sprite, L: Layout, const SIZE: usize> core::fmt::Write for Grid<S, L, SIZE> {
+impl<S: Sprite, L: Layout, const SIZE: usize, const SW: usize, const SH: usize> core::fmt::Write
+    for Grid<S, L, SIZE, SW, SH>
+{
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         let mut cursor = self.cursor;
         for glyph in s.as_bytes() {
@@ -207,10 +209,10 @@ const DIR_DOWN: usize = 2;
 const DIR_UP: usize = 3;
 
 impl<const DIR: usize, const WRAP: u16> Layout for GridLayout<DIR, WRAP> {
-    fn layout(node_idx: usize, origin: Point, size: Size) -> Rect {
+    fn layout(node_idx: usize, origin: Point, size: Size) -> Point {
         let idx = node_idx as u16 % WRAP;
         let wraps = node_idx as u16 / WRAP;
-        let new_origin = match DIR {
+        match DIR {
             DIR_UP => Point(
                 origin.x() + size.width() * wraps,
                 origin.y() - size.height() * (idx + 1),
@@ -227,11 +229,13 @@ impl<const DIR: usize, const WRAP: u16> Layout for GridLayout<DIR, WRAP> {
                 origin.x() + size.width() * idx,
                 origin.y() + size.height() * wraps,
             ),
-        };
-        Rect(new_origin, size)
+        }
     }
 }
 
-pub type Label<S, const SIZE: usize> = Grid<S, GridLayout<DIR_LTR, { u16::MAX }>, SIZE>;
-pub type VerticalLabel<S, const SIZE: usize> = Grid<S, GridLayout<DIR_DOWN, { u16::MAX }>, SIZE>;
-pub type TextBox<S, const SIZE: usize, const WRAP: u16> = Grid<S, GridLayout<DIR_LTR, WRAP>, SIZE>;
+pub type Label<S, const SIZE: usize, const SW: usize, const SH: usize> =
+    Grid<S, GridLayout<DIR_LTR, { u16::MAX }>, SIZE, SW, SH>;
+pub type VerticalLabel<S, const SIZE: usize, const SW: usize, const SH: usize> =
+    Grid<S, GridLayout<DIR_DOWN, { u16::MAX }>, SIZE, SW, SH>;
+pub type TextBox<S, const SIZE: usize, const SW: usize, const SH: usize, const WRAP: u16> =
+    Grid<S, GridLayout<DIR_LTR, WRAP>, SIZE, SW, SH>;

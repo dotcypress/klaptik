@@ -10,6 +10,7 @@ version = "0.0.4"
 
 [dependencies]
 paste = "1.0.9"
+ssd1306 = "0.7.1"
 
 [dependencies.embedded-hal]
 features = ["unproven"]

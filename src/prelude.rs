@@ -2,11 +2,11 @@
 pub struct Point(pub u16, pub u16);
 
 impl Point {
-    pub fn x(&self) -> u16 {
+    pub const fn x(&self) -> u16 {
         self.0
     }
 
-    pub fn y(&self) -> u16 {
+    pub const fn y(&self) -> u16 {
         self.1
     }
 }
@@ -21,11 +21,11 @@ impl From<(u16, u16)> for Point {
 pub struct Size(pub u16, pub u16);
 
 impl Size {
-    pub fn width(&self) -> u16 {
+    pub const fn width(&self) -> u16 {
         self.0
     }
 
-    pub fn height(&self) -> u16 {
+    pub const fn height(&self) -> u16 {
         self.1
     }
 }
@@ -40,11 +40,15 @@ impl From<(u16, u16)> for Size {
 pub struct Rect(pub Point, pub Size);
 
 impl Rect {
-    pub fn origin(&self) -> Point {
+    pub const fn new(x: u16, y: u16, width: u16, height: u16) -> Self {
+        Self(Point(x, y), Size(width, height))
+    }
+
+    pub const fn origin(&self) -> Point {
         self.0
     }
 
-    pub fn size(&self) -> Size {
+    pub const fn size(&self) -> Size {
         self.1
     }
 }

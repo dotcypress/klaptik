@@ -3,9 +3,8 @@ use crate::*;
 pub type Glyph = u8;
 
 pub trait Sprite {
-    fn glyph_size(&self) -> Size;
     fn glyphs(&self) -> &[Glyph];
-    fn render(&self, glyph: Glyph) -> Option<&[u8]>;
+    fn render<C: Canvas>(&self, glyph: Glyph, origin: Point, canvas: &mut C);
 }
 
 #[derive(Clone, Copy)]
@@ -26,18 +25,18 @@ impl RomSprite {
 }
 
 impl Sprite for RomSprite {
-    fn glyph_size(&self) -> Size {
-        self.glyph_size
-    }
-
     fn glyphs(&self) -> &[Glyph] {
         self.glyphs.as_bytes()
     }
 
-    fn render(&self, glyph: Glyph) -> Option<&'static [u8]> {
-        let glyph_bytes = self.glyph_size.width() * self.glyph_size.height() / 8;
-        let glyph_index = self.glyphs.find(glyph as char)?;
-        let offset = glyph_index * glyph_bytes as usize;
-        Some(&self.bitmap[offset..(offset + glyph_bytes as usize)])
+    fn render<C: Canvas>(&self, glyph: Glyph, origin: Point, canvas: &mut C) {
+        let glyph_bytes = self.glyph_size.width() * self.glyph_size.height() >> 3;
+        if let Some(glyph_index) = self.glyphs.find(glyph as char) {
+            let offset = glyph_index * glyph_bytes as usize;
+            canvas.draw(
+                Rect(origin, self.glyph_size),
+                &self.bitmap[offset..(offset + glyph_bytes as usize)],
+            );
+        }
     }
 }
