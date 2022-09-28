@@ -1,6 +1,6 @@
 [package]
 name = "klaptik"
-description = "Experimental UI rendering framework for LCD/OLED displays"
+description = "Experimental UI rendering framework for monochrome LCD/OLED displays"
 authors = ["Vitaly Domnikov <oss@vitaly.codes>"]
 edition = "2018"
 license = "MIT/Apache-2.0"

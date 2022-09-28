@@ -1,6 +1,6 @@
 # klaptik
 
-🧩 Experimental UI rendering framework for LCD/OLED displays.
+🧩 Experimental UI rendering framework for monochrome LCD/OLED displays.
 
 ## License
 
