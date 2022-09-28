@@ -1,11 +1,11 @@
 use crate::prelude::*;
 use crate::Canvas;
-use ssd1306::prelude::*;
+use display_interface::WriteOnlyDataCommand;
+use ssd1309::properties::DisplayProperties;
 
-impl<DI, SIZE, MODE> Canvas for ssd1306::Ssd1306<DI, SIZE, MODE>
+impl<DI> Canvas for DisplayProperties<DI>
 where
     DI: WriteOnlyDataCommand,
-    SIZE: DisplaySize,
 {
     fn draw(&mut self, bounds: Rect, buffer: &[u8]) {
         let origin = bounds.origin();

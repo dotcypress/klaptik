@@ -68,12 +68,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "ist7920"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "56fe11ac05e0681ec15bf61b2129ad6502fd606841db8ee92870ea2764019931"
+dependencies = [
+ "display-interface",
+ "display-interface-spi",
+ "embedded-graphics-core",
+ "embedded-hal",
+]
+
+[[package]]
 name = "klaptik"
 version = "0.0.4"
 dependencies = [
+ "display-interface",
  "embedded-hal",
+ "ist7920",
  "paste",
+ "sh1106",
  "ssd1306",
+ "ssd1309",
 ]
 
 [[package]]
@@ -98,6 +114,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b1de2e551fb905ac83f73f7aedf2f0cb4a0da7e35efa24a202a936269f1f18e1"
 
 [[package]]
+name = "sh1106"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4b4022685baa7cc82b2fb97ced2b53fd753a21d98f45b0fd0b55fc717de9075a"
+dependencies = [
+ "embedded-graphics-core",
+ "embedded-hal",
+]
+
+[[package]]
 name = "ssd1306"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -106,6 +132,17 @@ dependencies = [
  "display-interface",
  "display-interface-i2c",
  "display-interface-spi",
+ "embedded-graphics-core",
+ "embedded-hal",
+]
+
+[[package]]
+name = "ssd1309"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0517d7e0e5e7e1409899f0719de8902024e0375f0e4678daef63dd69130ba462"
+dependencies = [
+ "display-interface",
  "embedded-graphics-core",
  "embedded-hal",
 ]

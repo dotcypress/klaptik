@@ -1,6 +1,6 @@
 [package]
 name = "klaptik"
-description = "Experimental UI rendering framework for `no_std` targets"
+description = "Experimental UI rendering framework for LCD/OLED displays"
 authors = ["Vitaly Domnikov <oss@vitaly.codes>"]
 edition = "2018"
 license = "MIT/Apache-2.0"
@@ -10,8 +10,19 @@ version = "0.0.4"
 
 [dependencies]
 paste = "1.0.9"
-ssd1306 = "0.7.1"
+display-interface = { version = "0.4.1", optional = true }
+ssd1306 = { version = "0.7.1", optional = true }
+sh1106 = { version = "0.4.0", optional = true }
+ssd1309 = { version = "0.3.0", optional = true }
+ist7920 = { version = "0.1.1", optional = true }
 
 [dependencies.embedded-hal]
 features = ["unproven"]
 version = "0.2.6"
+
+[features]
+ist7920 = ["dep:ist7920", "dep:display-interface"]
+sh1106 = ["dep:sh1106"]
+ssd1306 = ["dep:ssd1306"]
+ssd1309 = ["dep:ssd1309", "dep:display-interface"]
+st7567 = []
