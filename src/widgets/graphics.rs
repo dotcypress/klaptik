@@ -25,11 +25,6 @@ impl<S: StateRender + PartialEq + Sized, const N: usize> Drawing<S, N> {
             bounds: Rectangle::new(origin, size),
         }
     }
-
-    pub fn draw(&mut self, render: fn(state: &S)) {
-        render(&self.state);
-        self.render_req = true;
-    }
 }
 
 impl<S: StateRender + PartialEq + Sized, const N: usize> Widget<S> for Drawing<S, N> {
