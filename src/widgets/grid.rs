@@ -57,10 +57,7 @@ impl<S: Sprite, L: Layout, const SIZE: usize, const SW: usize, const SH: usize>
 {
     fn update(&mut self, state: &[Glyph; SIZE]) {
         for (idx, glyph) in state.iter().enumerate() {
-            if self.state[idx] != *glyph {
-                self.state[idx] = *glyph;
-                self.render_req[idx] = true;
-            }
+            self.set_glyph(idx, *glyph);
         }
         self.cursor = 0;
     }
@@ -88,10 +85,7 @@ impl<S: Sprite, L: Layout, const SIZE: usize, const SW: usize, const SH: usize> 
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         let mut cursor = self.cursor;
         for glyph in s.as_bytes() {
-            if self.state[cursor] != *glyph {
-                self.state[cursor] = *glyph;
-                self.render_req[cursor] = true;
-            }
+            self.set_glyph(cursor, *glyph);
             cursor += 1;
             if cursor >= SIZE {
                 cursor = 0;

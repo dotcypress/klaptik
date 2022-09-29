@@ -44,11 +44,10 @@ impl<S: DrawingState + PartialEq + Sized, const N: usize> Widget<S> for Drawing<
     }
 
     fn render<C: Canvas>(&mut self, canvas: &mut C) {
-        if !self.render_req {
-            return;
+        if self.render_req {
+            self.render_req = false;
+            canvas.draw(self.bounds, &self.framebuffer);
         }
-        self.render_req = false;
-        canvas.draw(self.bounds, &self.framebuffer);
     }
 }
 
