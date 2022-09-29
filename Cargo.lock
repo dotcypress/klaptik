@@ -84,6 +84,7 @@ name = "klaptik"
 version = "0.0.4"
 dependencies = [
  "display-interface",
+ "embedded-graphics-core",
  "embedded-hal",
  "ist7920",
  "paste",

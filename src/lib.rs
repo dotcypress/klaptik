@@ -1,18 +1,18 @@
 #![no_std]
-#![deny(warnings)]
+// #![deny(warnings)]
 
 pub mod drivers;
 
 mod macros;
-mod prelude;
 mod sprites;
 mod widgets;
 
+pub use embedded_graphics_core::geometry::*;
+pub use embedded_graphics_core::primitives::Rectangle;
 pub use macros::*;
-pub use prelude::*;
 pub use sprites::*;
 pub use widgets::*;
 
 pub trait Canvas {
-    fn draw(&mut self, bounds: Rect, buf: &[u8]);
+    fn draw(&mut self, bounds: Rectangle, buf: &[u8]);
 }

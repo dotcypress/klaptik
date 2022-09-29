@@ -30,11 +30,11 @@ impl Sprite for RomSprite {
     }
 
     fn render<C: Canvas>(&self, glyph: Glyph, origin: Point, canvas: &mut C) {
-        let glyph_bytes = self.glyph_size.width() * self.glyph_size.height() >> 3;
+        let glyph_bytes = self.glyph_size.width * self.glyph_size.height >> 3;
         if let Some(glyph_index) = self.glyphs.find(glyph as char) {
             let offset = glyph_index * glyph_bytes as usize;
             canvas.draw(
-                Rect(origin, self.glyph_size),
+                Rectangle::new(origin, self.glyph_size),
                 &self.bitmap[offset..(offset + glyph_bytes as usize)],
             );
         }

@@ -1,6 +1,6 @@
 use crate::drivers::spi::SpiLink;
-use crate::prelude::*;
 use crate::Canvas;
+use crate::*;
 use embedded_hal::blocking::delay::DelayMs;
 use embedded_hal::blocking::spi;
 use embedded_hal::digital::v2::*;
@@ -100,11 +100,11 @@ where
     CS: OutputPin,
     DC: OutputPin,
 {
-    fn draw(&mut self, bounds: Rect, buf: &[u8]) {
-        let col = bounds.origin().x() as u8;
-        let page = bounds.origin().y() >> 3;
-        let chunks = bounds.size().height() >> 3;
-        let width = bounds.size().width() as usize;
+    fn draw(&mut self, bounds: Rectangle, buf: &[u8]) {
+        let col = bounds.top_left.x as u8;
+        let page = bounds.top_left.y as u32 >> 3;
+        let chunks = bounds.size.height >> 3;
+        let width = bounds.size.width as usize;
 
         self.link
             .command(|tx| tx.write(&[Command::EnterRWRMode as _]))

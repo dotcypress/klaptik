@@ -25,7 +25,7 @@ impl<S: Sprite + Copy, L: Layout, const SIZE: usize, const SW: usize, const SH: 
 
         let mut origins: [Point; SIZE] = [Point::default(); SIZE];
         let pos = origin.into();
-        let size = Size(SW as _, SH as _);
+        let size = Size::new(SW as _, SH as _);
         for (idx, origin) in origins.iter_mut().enumerate() {
             *origin = L::layout(idx, pos, size);
         }
