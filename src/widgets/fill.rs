@@ -1,13 +1,13 @@
 use crate::*;
 
-pub type Background = Tile<0>;
+pub type Background = Fill<0>;
 
-pub struct Tile<const P: u8> {
+pub struct Fill<const PAT: u8> {
     bounds: Rectangle,
     render_req: bool,
 }
 
-impl<const P: u8> Tile<P> {
+impl<const PAT: u8> Fill<PAT> {
     pub fn new(origin: Point, size: Size) -> Self {
         Self {
             bounds: Rectangle::new(origin, size),
@@ -16,7 +16,7 @@ impl<const P: u8> Tile<P> {
     }
 }
 
-impl<const P: u8> Widget<()> for Tile<P> {
+impl<const PAT: u8> Widget<()> for Fill<PAT> {
     fn update(&mut self, _: ()) {}
 
     fn invalidate(&mut self) {
@@ -35,14 +35,13 @@ impl<const P: u8> Widget<()> for Tile<P> {
             for y in (0..size.height).step_by(8) {
                 let offset = Point::new(x as i32 + origin.x, y as i32 + origin.y);
                 let tile = Size::new(u32::min(8, size.width - x), u32::min(8, size.height - y));
-
                 let mut tile_len = tile.width * tile.height >> 3;
                 while tile_len > 0 {
                     let chunk_size = u32::min(32, tile_len);
                     tile_len -= chunk_size;
                     canvas.draw(
                         Rectangle::new(offset, tile),
-                        &[P; 32][..chunk_size as usize],
+                        &[PAT; 32][..chunk_size as usize],
                     )
                 }
             }

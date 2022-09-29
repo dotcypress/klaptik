@@ -1,22 +1,23 @@
 use crate::*;
+use core::convert::Infallible;
 use embedded_graphics_core::pixelcolor::BinaryColor;
 use embedded_graphics_core::prelude::*;
 
-pub trait StateRender
+pub trait DrawingState
 where
     Self: PartialEq + Sized,
 {
-    fn render<const N: usize>(&self, drawing: &mut Drawing<Self, N>);
+    fn draw<const N: usize>(&self, widget: &mut Drawing<Self, N>);
 }
 
-pub struct Drawing<S: StateRender + PartialEq + Sized, const N: usize> {
+pub struct Drawing<S: DrawingState + PartialEq + Sized, const N: usize> {
     pub framebuffer: [u8; N],
     state: S,
     bounds: Rectangle,
     render_req: bool,
 }
 
-impl<S: StateRender + PartialEq + Sized, const N: usize> Drawing<S, N> {
+impl<S: DrawingState + PartialEq + Sized, const N: usize> Drawing<S, N> {
     pub fn new<V: Into<S>>(state: V, origin: Point, size: Size) -> Self {
         Self {
             state: state.into(),
@@ -27,13 +28,13 @@ impl<S: StateRender + PartialEq + Sized, const N: usize> Drawing<S, N> {
     }
 }
 
-impl<S: StateRender + PartialEq + Sized, const N: usize> Widget<S> for Drawing<S, N> {
+impl<S: DrawingState + PartialEq + Sized, const N: usize> Widget<S> for Drawing<S, N> {
     fn update(&mut self, state: S) {
         if self.state == state {
             return;
         }
 
-        state.render(self);
+        state.draw(self);
         self.state = state;
         self.render_req = true;
     }
@@ -51,15 +52,15 @@ impl<S: StateRender + PartialEq + Sized, const N: usize> Widget<S> for Drawing<S
     }
 }
 
-impl<S: StateRender + PartialEq + Sized, const N: usize> OriginDimensions for Drawing<S, N> {
+impl<S: DrawingState + PartialEq + Sized, const N: usize> OriginDimensions for Drawing<S, N> {
     fn size(&self) -> Size {
         self.bounds.size
     }
 }
 
-impl<S: StateRender + PartialEq + Sized, const N: usize> DrawTarget for Drawing<S, N> {
+impl<S: DrawingState + PartialEq + Sized, const N: usize> DrawTarget for Drawing<S, N> {
     type Color = BinaryColor;
-    type Error = core::convert::Infallible;
+    type Error = Infallible;
 
     fn clear(&mut self, color: Self::Color) -> Result<(), Self::Error> {
         let val = if color.is_on() { 0xff } else { 0x00 };
@@ -73,7 +74,7 @@ impl<S: StateRender + PartialEq + Sized, const N: usize> DrawTarget for Drawing<
         I: IntoIterator<Item = Pixel<Self::Color>>,
     {
         let bb = Rectangle::new(Point::zero(), self.bounds.size);
-        for Pixel(coord, color) in pixels.into_iter().filter(|pixel| bb.contains(pixel.0)) {
+        for Pixel(coord, color) in pixels.into_iter().filter(|Pixel(p, _)| bb.contains(*p)) {
             let width = bb.size.width as usize;
             let x = coord.x as usize;
             let y = coord.y as usize;
@@ -84,7 +85,7 @@ impl<S: StateRender + PartialEq + Sized, const N: usize> DrawTarget for Drawing<
                 self.framebuffer[idx] |= mask;
             } else {
                 self.framebuffer[idx] &= !mask;
-            };
+            }
         }
 
         Ok(())

@@ -1,16 +1,16 @@
 use crate::*;
 
+mod fill;
+mod drawing;
 mod grid;
 mod icon;
 mod layout;
-mod tile;
-mod graphics;
 
-pub use graphics::*;
+pub use fill::*;
+pub use drawing::*;
 pub use grid::*;
 pub use icon::*;
 pub use layout::*;
-pub use tile::*;
 
 pub trait Widget<S> {
     fn invalidate(&mut self);
