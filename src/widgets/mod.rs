@@ -5,12 +5,14 @@ mod fill;
 mod grid;
 mod icon;
 mod layout;
+mod macros;
 
 pub use drawing::*;
 pub use fill::*;
 pub use grid::*;
 pub use icon::*;
 pub use layout::*;
+pub use macros::*;
 
 pub trait Widget<S> {
     fn invalidate(&mut self);

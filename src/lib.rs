@@ -3,13 +3,11 @@
 
 pub mod drivers;
 
-mod macros;
 mod sprites;
 mod widgets;
 
 pub use embedded_graphics_core::geometry::*;
 pub use embedded_graphics_core::primitives::Rectangle;
-pub use macros::*;
 pub use sprites::*;
 pub use widgets::*;
 
