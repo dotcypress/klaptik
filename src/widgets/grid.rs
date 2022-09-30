@@ -27,7 +27,7 @@ impl<S: Sprite + Copy, L: Layout, const SIZE: usize, const SW: usize, const SH: 
         let pos = origin.into();
         let size = Size::new(SW as _, SH as _);
         for (idx, origin) in origins.iter_mut().enumerate() {
-            *origin = L::layout(idx, pos, size);
+            *origin = L::layout(idx as u32, pos, size);
         }
 
         Self {

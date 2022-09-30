@@ -10,12 +10,12 @@ pub trait Sprite {
 #[derive(Clone, Copy)]
 pub struct RomSprite {
     bitmap: &'static [u8],
-    glyphs: &'static str,
+    glyphs: &'static [Glyph],
     glyph_size: Size,
 }
 
 impl RomSprite {
-    pub const fn new(glyphs: &'static str, glyph_size: Size, bitmap: &'static [u8]) -> Self {
+    pub const fn new(glyphs: &'static [Glyph], glyph_size: Size, bitmap: &'static [u8]) -> Self {
         Self {
             bitmap,
             glyphs,
@@ -26,12 +26,12 @@ impl RomSprite {
 
 impl Sprite for RomSprite {
     fn glyphs(&self) -> &[Glyph] {
-        self.glyphs.as_bytes()
+        self.glyphs
     }
 
     fn render<C: Canvas>(&self, glyph: Glyph, origin: Point, canvas: &mut C) {
         let glyph_bytes = self.glyph_size.width * self.glyph_size.height >> 3;
-        if let Some(glyph_index) = self.glyphs.find(glyph as char) {
+        if let Some(glyph_index) = self.glyphs.iter().position(|g| *g == glyph) {
             let offset = glyph_index * glyph_bytes as usize;
             canvas.draw(
                 Rectangle::new(origin, self.glyph_size),
