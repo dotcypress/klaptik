@@ -4,6 +4,7 @@ pub type Glyph = u8;
 
 pub trait Sprite {
     fn glyphs(&self) -> &[Glyph];
+    fn glyph_size(&self) -> Size;
     fn render<C: Canvas>(&self, glyph: Glyph, origin: Point, canvas: &mut C);
 }
 
@@ -27,6 +28,10 @@ impl RomSprite {
 impl Sprite for RomSprite {
     fn glyphs(&self) -> &[Glyph] {
         self.glyphs
+    }
+
+    fn glyph_size(&self) -> Size {
+        self.glyph_size
     }
 
     fn render<C: Canvas>(&self, glyph: Glyph, origin: Point, canvas: &mut C) {
