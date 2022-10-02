@@ -1,7 +1,13 @@
 use crate::*;
 use core::marker::PhantomData;
 
-pub struct Grid<S: Sprite, L: Layout, const LEN: usize, const SW: usize, const SH: usize> {
+pub struct Grid<
+    S: Sprite,
+    L: Layout,
+    const LEN: usize,
+    const SPRITE_W: usize,
+    const SPRITE_H: usize,
+> {
     layout: PhantomData<L>,
     sprite: S,
     state: [Glyph; LEN],
@@ -10,8 +16,13 @@ pub struct Grid<S: Sprite, L: Layout, const LEN: usize, const SW: usize, const S
     cursor: usize,
 }
 
-impl<S: Sprite + Copy, L: Layout, const LEN: usize, const SW: usize, const SH: usize>
-    Grid<S, L, LEN, SW, SH>
+impl<
+        S: Sprite + Copy,
+        L: Layout,
+        const LEN: usize,
+        const SPRITE_W: usize,
+        const SPRITE_H: usize,
+    > Grid<S, L, LEN, SPRITE_W, SPRITE_H>
 {
     pub fn new<P: Into<Point>>(sprite: S, val: &str, origin: P) -> Self {
         let glyph = sprite.glyphs()[0];
@@ -25,7 +36,7 @@ impl<S: Sprite + Copy, L: Layout, const LEN: usize, const SW: usize, const SH: u
 
         let mut origins: [Point; LEN] = [Point::default(); LEN];
         let pos = origin.into();
-        let size = Size::new(SW as _, SH as _);
+        let size = Size::new(SPRITE_W as _, SPRITE_H as _);
         for (idx, origin) in origins.iter_mut().enumerate() {
             *origin = L::layout(idx, pos, size);
         }
@@ -41,8 +52,8 @@ impl<S: Sprite + Copy, L: Layout, const LEN: usize, const SW: usize, const SH: u
     }
 }
 
-impl<S: Sprite, L: Layout, const LEN: usize, const SW: usize, const SH: usize>
-    Grid<S, L, LEN, SW, SH>
+impl<S: Sprite, L: Layout, const LEN: usize, const SPRITE_W: usize, const SPRITE_H: usize>
+    Grid<S, L, LEN, SPRITE_W, SPRITE_H>
 {
     pub fn set_glyph(&mut self, idx: usize, glyph: Glyph) {
         if self.state[idx] != glyph {
@@ -52,8 +63,8 @@ impl<S: Sprite, L: Layout, const LEN: usize, const SW: usize, const SH: usize>
     }
 }
 
-impl<S: Sprite, L: Layout, const LEN: usize, const SW: usize, const SH: usize>
-    Widget<&[Glyph; LEN]> for Grid<S, L, LEN, SW, SH>
+impl<S: Sprite, L: Layout, const LEN: usize, const SPRITE_W: usize, const SPRITE_H: usize>
+    Widget<&[Glyph; LEN]> for Grid<S, L, LEN, SPRITE_W, SPRITE_H>
 {
     fn update(&mut self, state: &[Glyph; LEN]) {
         for (idx, glyph) in state.iter().enumerate() {
@@ -79,8 +90,8 @@ impl<S: Sprite, L: Layout, const LEN: usize, const SW: usize, const SH: usize>
     }
 }
 
-impl<S: Sprite, L: Layout, const LEN: usize, const SW: usize, const SH: usize> core::fmt::Write
-    for Grid<S, L, LEN, SW, SH>
+impl<S: Sprite, L: Layout, const LEN: usize, const SPRITE_W: usize, const SPRITE_H: usize>
+    core::fmt::Write for Grid<S, L, LEN, SPRITE_W, SPRITE_H>
 {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         let mut cursor = self.cursor;
