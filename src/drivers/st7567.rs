@@ -40,6 +40,7 @@ where
 {
     link: SpiLink<SPI, CS, DC>,
     rst: RST,
+    offset: Point,
 }
 
 impl<SPI, RST, CS, DC> ST7567<SPI, RST, CS, DC>
@@ -53,12 +54,21 @@ where
         Self {
             rst,
             link: SpiLink::new(spi, cs, dc),
+            offset: Point::zero(),
         }
     }
 
     pub fn release(self) -> (SPI, CS, DC, RST) {
         let (spi, cs, dc) = self.link.release();
         (spi, cs, dc, self.rst)
+    }
+
+    pub fn link(&mut self) -> &mut SpiLink<SPI, CS, DC> {
+        &mut self.link
+    }
+
+    pub fn set_offset(&mut self, offset: Point) {
+        self.offset = offset
     }
 
     pub fn reset<D: DelayMs<u32>>(&mut self, delay: &mut D) {
@@ -101,8 +111,8 @@ where
     DC: OutputPin,
 {
     fn draw(&mut self, bounds: Rectangle, buf: &[u8]) {
-        let col = bounds.top_left.x as u8;
-        let page = bounds.top_left.y as u32 >> 3;
+        let col = (bounds.top_left.x + self.offset.x) as u8;
+        let page = (bounds.top_left.y + self.offset.y) as u32 >> 3;
         let chunks = bounds.size.height >> 3;
         let width = bounds.size.width as usize;
 
