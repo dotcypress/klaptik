@@ -11,11 +11,11 @@ pub struct Icon<S> {
 }
 
 impl<S: Sprite + Copy> Icon<S> {
-    pub fn new<P: Into<Point>>(sprite: S, state: Glyph, origin: P) -> Self {
+    pub fn new<G: Into<Glyph>>(sprite: S, state: G, origin: Point) -> Self {
         Self {
             sprite,
-            state,
-            origin: origin.into(),
+            origin,
+            state: state.into(),
             render_req: true,
         }
     }

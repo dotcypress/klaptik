@@ -119,6 +119,7 @@ where
         self.link
             .command(|tx| tx.write(&[Command::EnterRWRMode as _]))
             .ok();
+
         for chunk in 0..chunks {
             self.link
                 .command(|tx| {

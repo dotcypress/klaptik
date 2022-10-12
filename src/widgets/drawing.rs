@@ -11,7 +11,7 @@ where
 }
 
 pub struct Drawing<S: DrawingState + PartialEq + Sized, const N: usize> {
-    pub framebuffer: [u8; N],
+    framebuffer: [u8; N],
     state: S,
     bounds: Rectangle,
     render_req: bool,
@@ -21,9 +21,9 @@ impl<S: DrawingState + PartialEq + Sized, const N: usize> Drawing<S, N> {
     pub fn new<V: Into<S>>(state: V, origin: Point, size: Size) -> Self {
         Self {
             state: state.into(),
+            bounds: Rectangle::new(origin, size),
             render_req: true,
             framebuffer: [0; N],
-            bounds: Rectangle::new(origin, size),
         }
     }
 }

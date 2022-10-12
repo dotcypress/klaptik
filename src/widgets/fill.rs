@@ -8,7 +8,7 @@ pub struct Fill<const PAT: u8> {
 }
 
 impl<const PAT: u8> Fill<PAT> {
-    pub fn new(origin: Point, size: Size) -> Self {
+    pub const fn new(origin: Point, size: Size) -> Self {
         Self {
             bounds: Rectangle::new(origin, size),
             render_req: true,
