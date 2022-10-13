@@ -2,9 +2,21 @@ use crate::*;
 
 pub type Glyph = u8;
 
+pub trait Sprite {
+    fn glyphs(&self) -> GlyphIterator;
+    fn size(&self) -> Size;
+    fn render<C: Canvas>(&self, glyph: Glyph, origin: Point, canvas: &mut C);
+}
+
 pub struct GlyphIterator {
     glyphs: Glyphs,
     cursor: u8,
+}
+
+impl GlyphIterator {
+    pub fn new(glyphs: Glyphs) -> Self {
+        Self { glyphs, cursor: 0 }
+    }
 }
 
 impl Iterator for GlyphIterator {
@@ -34,12 +46,6 @@ impl ExactSizeIterator for GlyphIterator {
     }
 }
 
-pub trait Sprite {
-    fn glyphs(&self) -> GlyphIterator;
-    fn sprite_size(&self) -> Size;
-    fn render<C: Canvas>(&self, glyph: Glyph, origin: Point, canvas: &mut C);
-}
-
 #[derive(Clone, Copy)]
 pub enum Glyphs {
     Alphabet(&'static [Glyph]),
@@ -49,30 +55,27 @@ pub enum Glyphs {
 #[derive(Clone, Copy)]
 pub struct RomSprite {
     glyphs: Glyphs,
-    sprite_size: Size,
+    size: Size,
     bitmap: &'static [u8],
 }
 
 impl RomSprite {
-    pub const fn new(glyphs: Glyphs, sprite_size: Size, bitmap: &'static [u8]) -> Self {
+    pub const fn new(glyphs: Glyphs, size: Size, bitmap: &'static [u8]) -> Self {
         Self {
             bitmap,
             glyphs,
-            sprite_size,
+            size,
         }
     }
 }
 
 impl Sprite for RomSprite {
-    fn sprite_size(&self) -> Size {
-        self.sprite_size
+    fn size(&self) -> Size {
+        self.size
     }
 
     fn glyphs(&self) -> GlyphIterator {
-        GlyphIterator {
-            glyphs: self.glyphs,
-            cursor: 0,
-        }
+        GlyphIterator::new(self.glyphs)
     }
 
     fn render<C: Canvas>(&self, glyph: Glyph, origin: Point, canvas: &mut C) {
@@ -85,11 +88,11 @@ impl Sprite for RomSprite {
             _ => return,
         };
 
-        let size = self.sprite_size.width * self.sprite_size.height >> 3;
+        let size = self.size.width * self.size.height >> 3;
         let size = size as usize;
         let offset = glyph_index * size;
         canvas.draw(
-            Rectangle::new(origin, self.sprite_size),
+            Rectangle::new(origin, self.size),
             &self.bitmap[offset..(offset + size)],
         );
     }

@@ -22,7 +22,7 @@ impl<S: Sprite + Copy, L: Layout, const LEN: usize> Grid<S, L, LEN> {
         }
 
         let mut origins: [Point; LEN] = [Point::default(); LEN];
-        let size = sprite.sprite_size();
+        let size = sprite.size();
         for (idx, pos) in origins.iter_mut().enumerate() {
             *pos = L::layout(idx, origin, size);
         }
