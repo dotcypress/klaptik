@@ -1,32 +1,32 @@
 use crate::*;
 
-pub type SpriteIcon = Icon<RomSprite>;
+pub type RomIcon<G> = Icon<RomSprite, G>;
 
 #[derive(Clone, Copy)]
-pub struct Icon<S> {
+pub struct Icon<S, G> {
     sprite: S,
-    state: Glyph,
+    state: G,
     origin: Point,
     render_req: bool,
 }
 
-impl<S: Sprite + Copy> Icon<S> {
-    pub fn new<G: Into<Glyph>>(sprite: S, state: G, origin: Point) -> Self {
+impl<S: Sprite + Copy, G: Copy + PartialEq + Into<Glyph>> Icon<S, G> {
+    pub fn new(sprite: S, state: G, origin: Point) -> Self {
         Self {
             sprite,
             origin,
-            state: state.into(),
+            state,
             render_req: true,
         }
     }
 }
 
-impl<S: Sprite> Widget<Glyph> for Icon<S> {
+impl<S: Sprite + Copy, G: Copy + PartialEq + Into<Glyph>> Widget<G> for Icon<S, G> {
     fn invalidate(&mut self) {
         self.render_req = true;
     }
 
-    fn update(&mut self, state: Glyph) {
+    fn update(&mut self, state: G) {
         if self.state != state {
             self.state = state;
             self.render_req = true;
@@ -35,7 +35,7 @@ impl<S: Sprite> Widget<Glyph> for Icon<S> {
 
     fn render<C: Canvas>(&mut self, canvas: &mut C) {
         if self.render_req {
-            self.sprite.render(self.state, self.origin, canvas);
+            self.sprite.render(self.state.into(), self.origin, canvas);
             self.render_req = false;
         }
     }

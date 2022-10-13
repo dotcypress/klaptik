@@ -12,7 +12,7 @@ pub struct Grid<S: Sprite, L: Layout, const LEN: usize> {
 
 impl<S: Sprite + Copy, L: Layout, const LEN: usize> Grid<S, L, LEN> {
     pub fn new(sprite: S, val: &str, origin: Point) -> Self {
-        let glyph = sprite.glyphs()[0];
+        let glyph = sprite.glyphs().next().unwrap();
         let mut state: [Glyph; LEN] = [glyph; LEN];
         let mut render_req: [bool; LEN] = [false; LEN];
 
@@ -22,7 +22,7 @@ impl<S: Sprite + Copy, L: Layout, const LEN: usize> Grid<S, L, LEN> {
         }
 
         let mut origins: [Point; LEN] = [Point::default(); LEN];
-        let size = sprite.glyph_size();
+        let size = sprite.sprite_size();
         for (idx, pos) in origins.iter_mut().enumerate() {
             *pos = L::layout(idx, origin, size);
         }
