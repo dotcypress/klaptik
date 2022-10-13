@@ -10,7 +10,11 @@ pub struct Icon<S, G> {
     render_req: bool,
 }
 
-impl<S: Sprite + Copy, G: Copy + PartialEq + Into<Glyph>> Icon<S, G> {
+impl<S, G> Icon<S, G>
+where
+    S: Sprite + Copy,
+    G: Copy + PartialEq + Into<Glyph>,
+{
     pub fn new(sprite: S, state: G, origin: Point) -> Self {
         Self {
             sprite,
@@ -21,7 +25,11 @@ impl<S: Sprite + Copy, G: Copy + PartialEq + Into<Glyph>> Icon<S, G> {
     }
 }
 
-impl<S: Sprite + Copy, G: Copy + PartialEq + Into<Glyph>> Widget<G> for Icon<S, G> {
+impl<S, G> Widget<G> for Icon<S, G>
+where
+    S: Sprite + Copy,
+    G: Copy + PartialEq + Into<Glyph>,
+{
     fn invalidate(&mut self) {
         self.render_req = true;
     }

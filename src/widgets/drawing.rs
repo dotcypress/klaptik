@@ -10,14 +10,20 @@ where
     fn draw<const N: usize>(&self, widget: &mut Drawing<Self, N>);
 }
 
-pub struct Drawing<S: DrawingState + PartialEq + Sized, const N: usize> {
+pub struct Drawing<S, const N: usize>
+where
+    S: DrawingState + PartialEq + Sized,
+{
     framebuffer: [u8; N],
     state: S,
     bounds: Rectangle,
     render_req: bool,
 }
 
-impl<S: DrawingState + PartialEq + Sized, const N: usize> Drawing<S, N> {
+impl<S, const N: usize> Drawing<S, N>
+where
+    S: DrawingState + PartialEq + Sized,
+{
     pub fn new<V: Into<S>>(state: V, origin: Point, size: Size) -> Self {
         Self {
             state: state.into(),
@@ -28,7 +34,10 @@ impl<S: DrawingState + PartialEq + Sized, const N: usize> Drawing<S, N> {
     }
 }
 
-impl<S: DrawingState + PartialEq + Sized, const N: usize> Widget<S> for Drawing<S, N> {
+impl<S, const N: usize> Widget<S> for Drawing<S, N>
+where
+    S: DrawingState + PartialEq + Sized,
+{
     fn update(&mut self, state: S) {
         if self.state == state {
             return;
@@ -51,13 +60,19 @@ impl<S: DrawingState + PartialEq + Sized, const N: usize> Widget<S> for Drawing<
     }
 }
 
-impl<S: DrawingState + PartialEq + Sized, const N: usize> OriginDimensions for Drawing<S, N> {
+impl<S, const N: usize> OriginDimensions for Drawing<S, N>
+where
+    S: DrawingState + PartialEq + Sized,
+{
     fn size(&self) -> Size {
         self.bounds.size
     }
 }
 
-impl<S: DrawingState + PartialEq + Sized, const N: usize> DrawTarget for Drawing<S, N> {
+impl<S, const N: usize> DrawTarget for Drawing<S, N>
+where
+    S: DrawingState + PartialEq + Sized,
+{
     type Color = BinaryColor;
     type Error = Infallible;
 

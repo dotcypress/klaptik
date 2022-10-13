@@ -35,7 +35,7 @@ impl<const PAT: u8> Widget<()> for Fill<PAT> {
             for y in (0..size.height).step_by(8) {
                 let offset = Point::new(x as i32 + origin.x, y as i32 + origin.y);
                 let tile = Size::new(u32::min(8, size.width - x), u32::min(8, size.height - y));
-                let mut tile_len = tile.width * tile.height >> 3;
+                let mut tile_len = (tile.width * tile.height) >> 3;
                 while tile_len > 0 {
                     let chunk_size = u32::min(32, tile_len);
                     tile_len -= chunk_size;
