@@ -111,9 +111,9 @@ where
     DC: OutputPin,
 {
     fn draw(&mut self, bounds: Rectangle, buf: &[u8]) {
-        let col = (bounds.top_left.x + self.offset.x) as u8;
-        let page = (bounds.top_left.y + self.offset.y) as u32 >> 3;
-        let chunks = bounds.size.height >> 3;
+        let col = (bounds.origin.x + self.offset.x) as u8;
+        let page = (bounds.origin.y + self.offset.y) as u32 >> 3;
+        let chunks = bounds.size.height as u32 >> 3;
         let width = bounds.size.width as usize;
 
         self.link

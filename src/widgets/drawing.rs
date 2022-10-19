@@ -1,7 +1,9 @@
-use crate::*;
+use crate::Canvas;
+use crate::Widget;
 use core::convert::Infallible;
 use embedded_graphics_core::pixelcolor::BinaryColor;
 use embedded_graphics_core::prelude::*;
+use embedded_graphics_core::primitives::*;
 
 pub trait DrawingState
 where
@@ -55,7 +57,11 @@ where
     fn render<C: Canvas>(&mut self, canvas: &mut C) {
         if self.render_req {
             self.render_req = false;
-            canvas.draw(self.bounds, &self.framebuffer);
+            let bounds = crate::Rectangle::new(
+                crate::Point::new(self.bounds.top_left.x as _, self.bounds.top_left.y as _),
+                crate::Size::new(self.bounds.size.width as _, self.bounds.size.height as _),
+            );
+            canvas.draw(bounds, &self.framebuffer);
         }
     }
 }

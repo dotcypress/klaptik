@@ -29,13 +29,13 @@ impl<const PAT: u8> Widget<()> for Fill<PAT> {
         }
         self.render_req = false;
 
-        let origin = self.bounds.top_left;
+        let origin = self.bounds.origin;
         let size = self.bounds.size;
         for x in (0..size.width).step_by(8) {
             for y in (0..size.height).step_by(8) {
-                let offset = Point::new(x as i32 + origin.x, y as i32 + origin.y);
-                let tile = Size::new(u32::min(8, size.width - x), u32::min(8, size.height - y));
-                let mut tile_len = (tile.width * tile.height) >> 3;
+                let offset = Point::new(x + origin.x, y + origin.y);
+                let tile = Size::new(u8::min(8, size.width - x), u8::min(8, size.height - y));
+                let mut tile_len = (tile.width as u32 * tile.height as u32) >> 3;
                 while tile_len > 0 {
                     let chunk_size = u32::min(32, tile_len);
                     tile_len -= chunk_size;

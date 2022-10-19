@@ -82,7 +82,7 @@ impl Sprite {
             _ => return,
         };
 
-        let size = (self.size.width * self.size.height) >> 3;
+        let size = (self.size.width as u32 * self.size.height as u32) >> 3;
         let size = size as usize;
         let offset = glyph_index * size;
         canvas.draw(

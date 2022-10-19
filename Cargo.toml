@@ -22,7 +22,7 @@ features = ["unproven"]
 version = "0.2.6"
 
 [features]
-# default=["ist7920", "sh1106", "ssd1306", "ssd1309", "st7567"]
+default=["ist7920", "sh1106", "ssd1306", "ssd1309", "st7567"]
 ist7920 = ["dep:ist7920", "dep:display-interface"]
 sh1106 = ["dep:sh1106"]
 ssd1306 = ["dep:ssd1306"]

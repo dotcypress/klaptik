@@ -24,7 +24,7 @@ where
             render_req[idx] = true;
         }
 
-        let mut origins: [Point; LEN] = [Point::default(); LEN];
+        let mut origins: [Point; LEN] = [Point::zero(); LEN];
         let size = sprite.size();
         for (idx, pos) in origins.iter_mut().enumerate() {
             *pos = L::layout(idx, origin, size);
