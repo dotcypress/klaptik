@@ -1,25 +1,20 @@
 use crate::*;
 use core::marker::PhantomData;
 
-pub struct Grid<S, L, const LEN: usize>
-where
-    S: Sprite,
-    L: Layout,
-{
+pub struct Grid<L: Layout, const LEN: usize> {
     layout: PhantomData<L>,
-    sprite: S,
+    sprite: Sprite,
     state: [Glyph; LEN],
     origins: [Point; LEN],
     render_req: [bool; LEN],
     cursor: usize,
 }
 
-impl<S, L, const LEN: usize> Grid<S, L, LEN>
+impl<L: Layout, const LEN: usize> Grid<L, LEN>
 where
-    S: Sprite + Copy,
     L: Layout,
 {
-    pub fn new(sprite: S, val: &str, origin: Point) -> Self {
+    pub fn new(sprite: Sprite, val: &str, origin: Point) -> Self {
         let glyph = sprite.glyphs().next().unwrap();
         let mut state: [Glyph; LEN] = [glyph; LEN];
         let mut render_req: [bool; LEN] = [false; LEN];
@@ -46,11 +41,7 @@ where
     }
 }
 
-impl<S, L, const LEN: usize> Grid<S, L, LEN>
-where
-    S: Sprite,
-    L: Layout,
-{
+impl<L: Layout, const LEN: usize> Grid<L, LEN> {
     pub fn set_glyph(&mut self, idx: usize, glyph: Glyph) {
         if self.state[idx] != glyph {
             self.state[idx] = glyph;
@@ -59,11 +50,7 @@ where
     }
 }
 
-impl<S, L, const LEN: usize> Widget<&[Glyph; LEN]> for Grid<S, L, LEN>
-where
-    S: Sprite,
-    L: Layout,
-{
+impl<L: Layout, const LEN: usize> Widget<&[Glyph; LEN]> for Grid<L, LEN> {
     fn update(&mut self, state: &[Glyph; LEN]) {
         for (idx, glyph) in state.iter().enumerate() {
             self.set_glyph(idx, *glyph);
@@ -88,11 +75,7 @@ where
     }
 }
 
-impl<S, L, const LEN: usize> core::fmt::Write for Grid<S, L, LEN>
-where
-    S: Sprite,
-    L: Layout,
-{
+impl<L: Layout, const LEN: usize> core::fmt::Write for Grid<L, LEN> {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         let mut cursor = self.cursor;
         for glyph in s.as_bytes() {

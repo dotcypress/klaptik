@@ -2,12 +2,6 @@ use crate::*;
 
 pub type Glyph = u8;
 
-pub trait Sprite {
-    fn glyphs(&self) -> GlyphIterator;
-    fn size(&self) -> Size;
-    fn render<C: Canvas>(&self, glyph: Glyph, origin: Point, canvas: &mut C);
-}
-
 pub struct GlyphIterator {
     glyphs: Glyphs,
     cursor: u8,
@@ -53,13 +47,13 @@ pub enum Glyphs {
 }
 
 #[derive(Clone, Copy)]
-pub struct RomSprite {
+pub struct Sprite {
     glyphs: Glyphs,
     size: Size,
     bitmap: &'static [u8],
 }
 
-impl RomSprite {
+impl Sprite {
     pub const fn new(glyphs: Glyphs, size: Size, bitmap: &'static [u8]) -> Self {
         Self {
             bitmap,
@@ -69,16 +63,16 @@ impl RomSprite {
     }
 }
 
-impl Sprite for RomSprite {
-    fn size(&self) -> Size {
+impl Sprite {
+    pub fn size(&self) -> Size {
         self.size
     }
 
-    fn glyphs(&self) -> GlyphIterator {
+    pub fn glyphs(&self) -> GlyphIterator {
         GlyphIterator::new(self.glyphs)
     }
 
-    fn render<C: Canvas>(&self, glyph: Glyph, origin: Point, canvas: &mut C) {
+    pub fn render<C: Canvas>(&self, glyph: Glyph, origin: Point, canvas: &mut C) {
         let glyph_index = match self.glyphs {
             Glyphs::Sequential(len) if glyph < len => glyph as usize,
             Glyphs::Alphabet(glyphs) => match glyphs.iter().position(|g| *g == glyph) {

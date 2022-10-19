@@ -20,6 +20,7 @@ pub trait Widget<S> {
     fn render<C: Canvas>(&mut self, canvas: &mut C);
 }
 
-pub type Label<S, const LEN: usize> = Grid<S, GridLayout<DIR_LTR, { usize::MAX }>, LEN>;
-pub type VerticalLabel<S, const LEN: usize> = Grid<S, GridLayout<DIR_DOWN, { usize::MAX }>, LEN>;
-pub type TextBox<S, const LEN: usize, const WRAP: usize> = Grid<S, GridLayout<DIR_LTR, WRAP>, LEN>;
+pub type GlyphIcon = Icon<Glyph>;
+pub type Label<const LEN: usize> = Grid<GridLayout<DIR_LTR, { usize::MAX }>, LEN>;
+pub type VerticalLabel<const LEN: usize> = Grid<GridLayout<DIR_DOWN, { usize::MAX }>, LEN>;
+pub type WrapPanel<const LEN: usize, const WRAP: usize> = Grid<GridLayout<DIR_LTR, WRAP>, LEN>;
