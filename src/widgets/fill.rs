@@ -29,6 +29,7 @@ impl<const PAT: u8> Widget<()> for Fill<PAT> {
         }
         self.render_req = false;
 
+        let pattern = [PAT; 32];
         let origin = self.bounds.origin;
         let size = self.bounds.size;
         for x in (0..size.width).step_by(8) {
@@ -41,7 +42,7 @@ impl<const PAT: u8> Widget<()> for Fill<PAT> {
                     tile_len -= chunk_size;
                     canvas.draw(
                         Rectangle::new(offset, tile),
-                        &[PAT; 32][..chunk_size as usize],
+                        &pattern[..chunk_size as usize],
                     )
                 }
             }

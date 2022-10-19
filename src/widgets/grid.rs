@@ -15,8 +15,7 @@ where
     L: Layout,
 {
     pub fn new(sprite: Sprite, val: &str, origin: Point) -> Self {
-        let glyph = sprite.glyphs().next().unwrap();
-        let mut state: [Glyph; LEN] = [glyph; LEN];
+        let mut state: [Glyph; LEN] = [0; LEN];
         let mut render_req: [bool; LEN] = [false; LEN];
 
         for (idx, sym) in val.bytes().enumerate() {
