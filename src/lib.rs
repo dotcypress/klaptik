@@ -11,6 +11,27 @@ pub use widgets::*;
 
 pub trait Canvas {
     fn draw(&mut self, bounds: Rectangle, buf: &[u8]);
+
+    fn clear(&mut self, bounds: Rectangle) {
+        let pattern = [0; 32];
+        let origin = bounds.origin;
+        let size = bounds.size;
+        for x in (0..size.width).step_by(8) {
+            for y in (0..size.height).step_by(8) {
+                let offset = Point::new(x + origin.x, y + origin.y);
+                let tile = Size::new(u8::min(8, size.width - x), u8::min(8, size.height - y));
+                let mut tile_len = (tile.width as u32 * tile.height as u32) >> 3;
+                while tile_len > 0 {
+                    let chunk_size = u32::min(32, tile_len);
+                    tile_len -= chunk_size;
+                    self.draw(
+                        Rectangle::new(offset, tile),
+                        &pattern[..chunk_size as usize],
+                    )
+                }
+            }
+        }
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]

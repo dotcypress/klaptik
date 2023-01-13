@@ -1,14 +1,14 @@
 use crate::*;
 
 mod drawing;
-mod fill;
+mod background;
 mod grid;
 mod icon;
 mod layout;
 mod macros;
 
 pub use drawing::*;
-pub use fill::*;
+pub use background::*;
 pub use grid::*;
 pub use icon::*;
 pub use layout::*;
