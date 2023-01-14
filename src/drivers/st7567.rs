@@ -1,5 +1,4 @@
 use crate::drivers::spi::SpiLink;
-use crate::Canvas;
 use crate::*;
 use embedded_hal::blocking::delay::DelayMs;
 use embedded_hal::blocking::spi;
@@ -110,8 +109,8 @@ where
     CS: OutputPin,
     DC: OutputPin,
 {
-    fn draw(&mut self, bounds: Rectangle, buf: &[u8]) {
-        let col = (bounds.origin.x + self.offset.x) as u8;
+    fn draw(&mut self, bounds: Rectangle, bitmap: &[u8]) {
+        let col = bounds.origin.x + self.offset.x;
         let page = (bounds.origin.y + self.offset.y) as u32 >> 3;
         let chunks = bounds.size.height as u32 >> 3;
         let width = bounds.size.width as usize;
@@ -132,7 +131,7 @@ where
                 .ok();
             let offset = width * chunk as usize;
             self.link
-                .data(|tx| tx.write(&buf[offset..(offset + width)]))
+                .data(|tx| tx.write(&bitmap[offset..(offset + width)]))
                 .ok();
         }
 

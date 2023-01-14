@@ -1,26 +1,23 @@
 use crate::*;
 
-mod drawing;
-mod background;
 mod grid;
 mod icon;
-mod layout;
 mod macros;
+mod tile;
 
-pub use drawing::*;
-pub use background::*;
 pub use grid::*;
 pub use icon::*;
 pub use layout::*;
 pub use macros::*;
+pub use tile::*;
 
 pub trait Widget<S> {
     fn invalidate(&mut self);
     fn update(&mut self, state: S);
-    fn render<C: Canvas>(&mut self, canvas: &mut C);
+    fn render<D: Display>(&mut self, render: &mut D);
 }
 
 pub type GlyphIcon = Icon<Glyph>;
-pub type Label<const LEN: usize> = Grid<GridLayout<DIR_LTR, { usize::MAX }>, LEN>;
-pub type VerticalLabel<const LEN: usize> = Grid<GridLayout<DIR_DOWN, { usize::MAX }>, LEN>;
-pub type WrapPanel<const LEN: usize, const WRAP: usize> = Grid<GridLayout<DIR_LTR, WRAP>, LEN>;
+pub type Label<const L: usize> = Grid<WrapLayout<DirRight, { usize::MAX }>, L>;
+pub type VerticalLabel<const L: usize> = Grid<WrapLayout<DirDown, { usize::MAX }>, L>;
+pub type WrapPanel<const L: usize, const W: usize> = Grid<WrapLayout<DirRight, W>, L>;

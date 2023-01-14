@@ -6,15 +6,10 @@ impl<DI> Canvas for DisplayProperties<DI>
 where
     DI: WriteOnlyDataCommand,
 {
-    fn draw(&mut self, bounds: Rectangle, buffer: &[u8]) {
-        let origin = bounds.origin;
-        let size = bounds.size;
-        let start = (origin.x as u8, origin.y as u8);
-        let end = (
-            (origin.x as u32 + size.width as u32) as u8,
-            (origin.y as u32 + size.height as u32) as u8,
-        );
+    fn draw(&mut self, bounds: Rectangle, bitmap: &[u8]) {
+        let start = bounds.start().into();
+        let end = bounds.end().into();
         self.set_draw_area(start, end).ok();
-        self.draw(buffer).ok();
+        self.draw(bitmap).ok();
     }
 }

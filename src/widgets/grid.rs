@@ -1,12 +1,13 @@
+use crate::layout::*;
 use crate::*;
 use core::marker::PhantomData;
 
 pub struct Grid<L: Layout, const LEN: usize> {
     layout: PhantomData<L>,
-    sprite: Sprite,
+    sprite_id: SpriteId,
     state: [Glyph; LEN],
     origins: [Point; LEN],
-    render_req: [bool; LEN],
+    invalidate: [bool; LEN],
     cursor: usize,
 }
 
@@ -14,27 +15,31 @@ impl<L: Layout, const LEN: usize> Grid<L, LEN>
 where
     L: Layout,
 {
-    pub fn new(sprite: Sprite, val: &str, origin: Point) -> Self {
+    pub fn new<SI: Into<SpriteId>>(
+        sprite_id: SI,
+        val: &str,
+        origin: Point,
+        sprite_size: Size,
+    ) -> Self {
         let mut state: [Glyph; LEN] = [0; LEN];
-        let mut render_req: [bool; LEN] = [false; LEN];
+        let mut invalidate: [bool; LEN] = [false; LEN];
 
         for (idx, sym) in val.bytes().enumerate() {
             state[idx] = sym;
-            render_req[idx] = true;
+            invalidate[idx] = true;
         }
 
         let mut origins: [Point; LEN] = [Point::zero(); LEN];
-        let size = sprite.size();
         for (idx, pos) in origins.iter_mut().enumerate() {
-            *pos = L::layout(idx, origin, size);
+            *pos = L::layout(idx, origin, sprite_size);
         }
 
         Self {
             origins,
-            sprite,
             state,
-            render_req,
+            invalidate,
             cursor: 0,
+            sprite_id: sprite_id.into(),
             layout: PhantomData {},
         }
     }
@@ -44,7 +49,7 @@ impl<L: Layout, const LEN: usize> Grid<L, LEN> {
     pub fn set_glyph(&mut self, idx: usize, glyph: Glyph) {
         if self.state[idx] != glyph {
             self.state[idx] = glyph;
-            self.render_req[idx] = true;
+            self.invalidate[idx] = true;
         }
     }
 }
@@ -58,17 +63,17 @@ impl<L: Layout, const LEN: usize> Widget<&[Glyph; LEN]> for Grid<L, LEN> {
     }
 
     fn invalidate(&mut self) {
-        for render_req in self.render_req.iter_mut() {
-            *render_req = true;
+        for invalidate in self.invalidate.iter_mut() {
+            *invalidate = true;
         }
     }
 
-    fn render<C: Canvas>(&mut self, canvas: &mut C) {
-        for (idx, render_req) in self.render_req.iter_mut().enumerate() {
-            if *render_req {
+    fn render<D: Display>(&mut self, display: &mut D) {
+        for (idx, invalidate) in self.invalidate.iter_mut().enumerate() {
+            if *invalidate {
                 let glyph = self.state[idx];
-                self.sprite.render(glyph, self.origins[idx], canvas);
-                *render_req = false;
+                display.render(RenderRequest::new(self.origins[idx], self.sprite_id, glyph));
+                *invalidate = false;
             }
         }
     }

@@ -1,6 +1,43 @@
 pub use paste::paste;
 
 #[macro_export]
+macro_rules! widget {
+(
+    $name:ident<$state:ty>,
+    $widget_type:ty $(, $widget_args:expr)*;
+    $(, $update_hook:expr)?
+) => {
+    pub struct $name {
+        pub child: $widget_type,
+    }
+
+    impl $name {
+        pub fn new() -> Self {
+            Self {
+                child: <$widget_type>::new($($widget_args),*),
+            }
+        }
+    }
+
+    impl Widget<$state> for $name {
+        fn update(&mut self, state: $state) {
+            $(
+                $update_hook(self, state);
+            )?
+        }
+
+        fn invalidate(&mut self) {
+            self.child.invalidate();
+        }
+
+        fn render<D: Display>(&mut self, display: &mut D) {
+            self.child.render(display);
+        }
+    }
+};
+}
+
+#[macro_export]
 macro_rules! widget_group {
 (
     $name:ident<$state:ty>,
@@ -36,9 +73,9 @@ macro_rules! widget_group {
             )+
         }
 
-        fn render<C: Canvas>(&mut self, canvas: &mut C) {
+        fn render<D: Display>(&mut self, display: &mut D) {
             $(
-                self.$node_name.render(canvas);
+                self.$node_name.render(display);
             )+
         }
     }
@@ -56,7 +93,7 @@ macro_rules! widget_mux {
     $(, $update_hook:expr)?
 ) => {
     paste! {
-        #[derive(PartialEq, Clone, Copy, Debug)]
+        #[derive(PartialEq, Eq, Clone, Copy, Debug)]
         pub enum [<$name:camel Node>] {
             $([<$node_name:camel>]),+
         }
@@ -98,10 +135,10 @@ macro_rules! widget_mux {
                 )+
             }
 
-            fn render<C: Canvas>(&mut self, canvas: &mut C) {
+            fn render<D: Display>(&mut self, display: &mut D) {
                 $(
                     if self.active == [<$name:camel Node>]::[<$node_name:camel>] {
-                        self.$node_name.render(canvas);
+                        self.$node_name.render(display);
                     }
                 )+
             }

@@ -2,35 +2,46 @@
 #![deny(warnings)]
 
 pub mod drivers;
+pub mod layout;
 
+mod display;
 mod sprites;
 mod widgets;
 
+pub use display::*;
 pub use sprites::*;
 pub use widgets::*;
 
 pub trait Canvas {
-    fn draw(&mut self, bounds: Rectangle, buf: &[u8]);
+    fn draw(&mut self, bounds: Rectangle, bitmap: &[u8]);
+}
 
-    fn clear(&mut self, bounds: Rectangle) {
-        let pattern = [0; 32];
-        let origin = bounds.origin;
-        let size = bounds.size;
-        for x in (0..size.width).step_by(8) {
-            for y in (0..size.height).step_by(8) {
-                let offset = Point::new(x + origin.x, y + origin.y);
-                let tile = Size::new(u8::min(8, size.width - x), u8::min(8, size.height - y));
-                let mut tile_len = (tile.width as u32 * tile.height as u32) >> 3;
-                while tile_len > 0 {
-                    let chunk_size = u32::min(32, tile_len);
-                    tile_len -= chunk_size;
-                    self.draw(
-                        Rectangle::new(offset, tile),
-                        &pattern[..chunk_size as usize],
-                    )
-                }
-            }
+pub trait Display {
+    fn render(&mut self, req: RenderRequest);
+}
+
+pub struct RenderRequest {
+    origin: Point,
+    sprite_id: SpriteId,
+    glyph: Glyph,
+}
+
+impl RenderRequest {
+    pub fn new(origin: Point, sprite_id: SpriteId, glyph: Glyph) -> Self {
+        Self {
+            origin,
+            sprite_id,
+            glyph,
         }
+    }
+
+    pub fn into_bytes(&self) -> [u8; 4] {
+        [self.origin.x, self.origin.y, self.sprite_id, self.glyph]
+    }
+
+    pub fn from_bytes(bytes: &[u8]) -> Self {
+        assert!(bytes.len() == 4);
+        Self::new(Point::new(bytes[1], bytes[2]), bytes[3], bytes[4])
     }
 }
 
@@ -47,6 +58,12 @@ impl Point {
 
     pub const fn new(x: u8, y: u8) -> Self {
         Self { x, y }
+    }
+}
+
+impl From<Point> for (u8, u8) {
+    fn from(p: Point) -> Self {
+        (p.x, p.y)
     }
 }
 
@@ -71,5 +88,15 @@ pub struct Rectangle {
 impl Rectangle {
     pub const fn new(origin: Point, size: Size) -> Self {
         Self { origin, size }
+    }
+
+    pub fn start(&self) -> Point {
+        self.origin
+    }
+
+    pub fn end(&self) -> Point {
+        let origin = self.origin;
+        let size = self.size;
+        Point::new(origin.x + size.width, origin.y + size.height)
     }
 }
