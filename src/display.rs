@@ -29,3 +29,21 @@ impl<C: Canvas, const N: usize> Display for SpriteDisplay<C, N> {
         }
     }
 }
+
+pub struct MirrorDisplay<A: Display, B: Display> {
+    a: A,
+    b: B,
+}
+
+impl<A: Display, B: Display> MirrorDisplay<A, B> {
+    pub fn new(a: A, b: B) -> Self {
+        Self { a, b }
+    }
+}
+
+impl<A: Display, B: Display> Display for MirrorDisplay<A, B> {
+    fn render(&mut self, req: RenderRequest) {
+        self.a.render(req);
+        self.b.render(req);
+    }
+}

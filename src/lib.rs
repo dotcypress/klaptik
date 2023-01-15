@@ -20,6 +20,7 @@ pub trait Display {
     fn render(&mut self, req: RenderRequest);
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct RenderRequest {
     origin: Point,
     sprite_id: SpriteId,
