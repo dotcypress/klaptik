@@ -22,9 +22,9 @@ pub trait Display {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct RenderRequest {
-    origin: Point,
-    sprite_id: SpriteId,
-    glyph: Glyph,
+    pub origin: Point,
+    pub sprite_id: SpriteId,
+    pub glyph: Glyph,
 }
 
 impl RenderRequest {
@@ -43,6 +43,10 @@ impl RenderRequest {
     pub fn from_bytes(bytes: &[u8]) -> Self {
         assert!(bytes.len() == 4);
         Self::new(Point::new(bytes[0], bytes[1]), bytes[2], bytes[3])
+    }
+
+    pub fn glyph_path(&self) -> u16 {
+        u16::from_be_bytes([self.sprite_id, self.glyph])
     }
 }
 
