@@ -20,7 +20,7 @@ pub trait Display {
     fn render(&mut self, req: RenderRequest);
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RenderRequest {
     pub origin: Point,
     pub sprite_id: SpriteId,
@@ -50,7 +50,7 @@ impl RenderRequest {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Point {
     pub x: u8,
     pub y: u8,
@@ -72,7 +72,7 @@ impl From<Point> for (u8, u8) {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Size {
     pub width: u8,
     pub height: u8,
@@ -84,7 +84,7 @@ impl Size {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Rectangle {
     pub origin: Point,
     pub size: Size,
