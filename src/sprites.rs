@@ -1,8 +1,5 @@
 use crate::*;
 
-pub type Glyph = u8;
-pub type SpriteId = u8;
-
 pub enum Glyphs {
     Single,
     Sequential(u8),
