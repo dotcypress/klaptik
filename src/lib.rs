@@ -12,14 +12,10 @@ pub use display::*;
 pub use sprites::*;
 pub use widgets::*;
 
-pub trait Canvas {
-    fn draw(&mut self, bounds: Rectangle, bitmap: &[u8]);
-}
+pub type Glyph = u8;
+pub type SpriteId = u8;
 
-pub trait Display {
-    fn render(&mut self, req: RenderRequest);
-}
-
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RenderRequest {
     pub origin: Point,
@@ -50,6 +46,7 @@ impl RenderRequest {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Point {
     pub x: u8,
@@ -72,6 +69,7 @@ impl From<Point> for (u8, u8) {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Size {
     pub width: u8,
@@ -84,6 +82,7 @@ impl Size {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Rectangle {
     pub origin: Point,
@@ -104,4 +103,12 @@ impl Rectangle {
         let size = self.size;
         Point::new(origin.x + size.width, origin.y + size.height)
     }
+}
+
+pub trait Canvas {
+    fn draw(&mut self, bounds: Rectangle, bitmap: &[u8]);
+}
+
+pub trait Display {
+    fn render(&mut self, req: RenderRequest);
 }
