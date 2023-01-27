@@ -10,3 +10,5 @@ pub mod ssd1306;
 pub mod ssd1309;
 #[cfg(feature = "st7567")]
 pub mod st7567;
+#[cfg(feature = "fx")]
+pub mod fx;

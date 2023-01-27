@@ -32,17 +32,13 @@ impl RenderRequest {
         }
     }
 
-    pub fn into_bytes(&self) -> [u8; 4] {
-        [self.origin.x, self.origin.y, self.sprite_id, self.glyph]
-    }
-
     pub fn from_bytes(bytes: &[u8]) -> Self {
         assert!(bytes.len() == 4);
         Self::new(Point::new(bytes[0], bytes[1]), bytes[2], bytes[3])
     }
 
-    pub fn glyph_path(&self) -> u16 {
-        u16::from_be_bytes([self.sprite_id, self.glyph])
+    pub fn as_bytes(&self) -> [u8; 4] {
+        [self.origin.x, self.origin.y, self.sprite_id, self.glyph]
     }
 }
 

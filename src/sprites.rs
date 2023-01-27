@@ -6,20 +6,42 @@ pub enum Glyphs {
     Alphabet(&'static [Glyph]),
 }
 
+impl Glyphs {
+    pub const fn len(&self) -> usize {
+        match self {
+            Glyphs::Single => 0,
+            Glyphs::Sequential(len) => *len as usize,
+            Glyphs::Alphabet(glyphs) => glyphs.len(),
+        }
+    }
+
+    pub fn index(&self, glyph: Glyph) -> Option<usize> {
+        match self {
+            Glyphs::Single => Some(0),
+            Glyphs::Sequential(len) if glyph < *len => Some(glyph as _),
+            Glyphs::Alphabet(glyphs) => glyphs.iter().position(|g| *g == glyph),
+            _ => None,
+        }
+    }
+}
+
 pub struct FlashSprite {
     id: SpriteId,
     glyphs: Glyphs,
     size: Size,
+    glyph_len: usize,
     bitmap: &'static [u8],
 }
 
 impl FlashSprite {
     pub const fn new(id: SpriteId, glyphs: Glyphs, size: Size, bitmap: &'static [u8]) -> Self {
+        let glyph_len = bitmap.len() / glyphs.len();
         Self {
             id,
             glyphs,
             size,
             bitmap,
+            glyph_len,
         }
     }
 }
@@ -33,20 +55,15 @@ impl FlashSprite {
         self.size
     }
 
-    pub fn bitmap(&self, glyph: Glyph) -> Option<&[u8]> {
-        let glyph_idx = match self.glyphs {
-            Glyphs::Single => 0,
-            Glyphs::Sequential(len) if glyph < len => glyph,
-            Glyphs::Alphabet(glyphs) => match glyphs.iter().position(|g| *g == glyph) {
-                None => return None,
-                Some(idx) => idx as u8,
-            },
-            _ => return None,
-        };
+    pub fn glyphs(&self) -> &Glyphs {
+        &self.glyphs
+    }
 
-        let size = (self.size.width as u32 * self.size.height as u32) >> 3;
-        let size = size as usize;
-        let offset = glyph_idx as usize * size;
-        Some(&self.bitmap[offset..(offset + size)])
+    pub fn bitmap(&self, glyph_index: usize) -> Option<&[u8]> {
+        if glyph_index >= self.glyphs.len() {
+            return None;
+        }
+        let offset = glyph_index * self.glyph_len;
+        Some(&self.bitmap[offset..][..self.glyph_len])
     }
 }
