@@ -4,6 +4,7 @@ use embedded_hal::blocking::i2c;
 pub enum FxCommand {
     DisplayConfig = 0x00,
     ReadRegister = 0x01,
+    WriteRegister = 0x02,
     UploadSprite = 0x80,
     DeleteSprite = 0x81,
 }
