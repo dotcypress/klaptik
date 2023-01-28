@@ -4,9 +4,9 @@ use embedded_hal::blocking::i2c;
 pub enum FxCommand {
     DisplayConfig = 0x00,
     ReadRegister = 0x01,
-    WriteRegister = 0x02,
     UploadSprite = 0x80,
     DeleteSprite = 0x81,
+    WriteRegister = 0xf0,
 }
 
 pub struct FxDisplay<L, const ADDR: usize, const N: usize> {
@@ -36,6 +36,11 @@ impl<L: i2c::Write, const ADDR: usize, const N: usize> FxDisplay<L, ADDR, N> {
     ) -> Result<(), <L as i2c::Write>::Error> {
         let payload = if on { backlight | 0x80 } else { backlight };
         self.write(&[FxCommand::DisplayConfig as _, payload])
+    }
+
+    pub fn write_register(&mut self, reg: u8, val: &[u8]) -> Result<(), <L as i2c::Write>::Error> {
+        self.write(&[FxCommand::WriteRegister as _, reg])?;
+        self.write(val)
     }
 
     pub fn upload_sprite(&mut self, sprite: &FlashSprite) -> Result<(), <L as i2c::Write>::Error> {
