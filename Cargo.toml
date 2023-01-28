@@ -9,7 +9,7 @@ repository = "https://github.com/dotcypress/klaptik"
 version = "0.1.0"
 
 [dependencies]
-paste = "1.0.9"
+paste = "1.0.11"
 display-interface = { version = "0.4.1", optional = true }
 ist7920 = { version = "0.1.1", optional = true }
 sh1106 = { version = "0.4.0", optional = true }
@@ -20,11 +20,11 @@ serde = { version = "1.0.140", default-features = false, optional = true }
 embedded-hal = {version = "0.2.6", features = ["unproven"]}
 
 [features]
-ci = ["fx", "ist7920", "sh1106", "ssd1306", "ssd1309", "st7567"]
-fx = []
+ci = ["ist7920", "sh1106", "ssd1306", "ssd1309", "st7567", "fx"]
 serde = ["dep:serde", "dep:postcard"]
 ist7920 = ["dep:ist7920", "dep:display-interface"]
 sh1106 = ["dep:sh1106"]
 ssd1306 = ["dep:ssd1306"]
 ssd1309 = ["dep:ssd1309", "dep:display-interface"]
 st7567 = []
+fx = []

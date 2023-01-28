@@ -6,21 +6,22 @@ pub enum Glyphs {
     Alphabet(&'static [Glyph]),
 }
 
+#[allow(clippy::len_without_is_empty)]
 impl Glyphs {
-    pub const fn len(&self) -> usize {
-        match self {
-            Glyphs::Single => 0,
-            Glyphs::Sequential(len) => *len as usize,
-            Glyphs::Alphabet(glyphs) => glyphs.len(),
-        }
-    }
-
     pub fn index(&self, glyph: Glyph) -> Option<usize> {
         match self {
             Glyphs::Single => Some(0),
             Glyphs::Sequential(len) if glyph < *len => Some(glyph as _),
             Glyphs::Alphabet(glyphs) => glyphs.iter().position(|g| *g == glyph),
             _ => None,
+        }
+    }
+
+    pub const fn len(&self) -> usize {
+        match self {
+            Glyphs::Single => 1,
+            Glyphs::Sequential(len) => *len as usize,
+            Glyphs::Alphabet(glyphs) => glyphs.len(),
         }
     }
 }
@@ -59,7 +60,11 @@ impl FlashSprite {
         &self.glyphs
     }
 
-    pub fn bitmap(&self, glyph_index: usize) -> Option<&[u8]> {
+    pub fn bitmap(&self) -> &[u8] {
+        self.bitmap
+    }
+
+    pub fn glyph_bitmap(&self, glyph_index: usize) -> Option<&[u8]> {
         if glyph_index >= self.glyphs.len() {
             return None;
         }

@@ -25,7 +25,7 @@ impl<C: Canvas, const N: usize> Display for SpriteDisplay<C, N> {
             if let Some(bitmap) = sprite
                 .glyphs()
                 .index(req.glyph)
-                .and_then(|idx| sprite.bitmap(idx))
+                .and_then(|idx| sprite.glyph_bitmap(idx))
             {
                 let bounds = Rectangle::new(req.origin, sprite.size());
                 self.canvas.draw(bounds, bitmap);
@@ -34,20 +34,17 @@ impl<C: Canvas, const N: usize> Display for SpriteDisplay<C, N> {
     }
 }
 
-pub struct MirrorDisplay<A: Display, B: Display> {
-    pub a: A,
-    pub b: B,
-}
-
-impl<A: Display, B: Display> MirrorDisplay<A, B> {
-    pub fn new(a: A, b: B) -> Self {
-        Self { a, b }
+impl<A: Display, B: Display> Display for (A, B) {
+    fn render(&mut self, req: RenderRequest) {
+        self.0.render(req);
+        self.1.render(req);
     }
 }
 
-impl<A: Display, B: Display> Display for MirrorDisplay<A, B> {
+impl<A: Display, B: Display, C: Display> Display for (A, B, C) {
     fn render(&mut self, req: RenderRequest) {
-        self.a.render(req);
-        self.b.render(req);
+        self.0.render(req);
+        self.1.render(req);
+        self.2.render(req);
     }
 }

@@ -2,9 +2,10 @@ use crate::*;
 use embedded_hal::blocking::i2c;
 
 pub enum FxCommand {
-    ReadRegister = 0,
-    DisplayOn = 1,
-    BacklightLevel = 2,
+    DisplayConfig = 0x00,
+    ReadRegister = 0x01,
+    UploadSprite = 0x80,
+    DeleteSprite = 0x81,
 }
 
 pub struct FxDisplay<L, const ADDR: usize, const N: usize> {
@@ -27,14 +28,39 @@ impl<L, const ADDR: usize, const N: usize> FxDisplay<L, ADDR, N> {
 }
 
 impl<L: i2c::Write, const ADDR: usize, const N: usize> FxDisplay<L, ADDR, N> {
-    pub fn switch_display(&mut self, on: bool) -> Result<(), <L as i2c::Write>::Error> {
-        self.link
-            .write(ADDR as _, &[FxCommand::DisplayOn as _, on as _])
+    pub fn display_config(
+        &mut self,
+        on: bool,
+        backlight: u8,
+    ) -> Result<(), <L as i2c::Write>::Error> {
+        let payload = if on { backlight | 0x80 } else { backlight };
+        self.write(&[FxCommand::DisplayConfig as _, payload])
     }
 
-    pub fn set_backlight(&mut self, level: u8) -> Result<(), <L as i2c::Write>::Error> {
-        self.link
-            .write(ADDR as _, &[FxCommand::BacklightLevel as _, level])
+    pub fn upload_sprite(&mut self, sprite: &FlashSprite) -> Result<(), <L as i2c::Write>::Error> {
+        self.write(&[FxCommand::UploadSprite as _, sprite.id()])?;
+
+        self.write(&[
+            sprite.id(),
+            sprite.size().width,
+            sprite.size().height,
+            sprite.glyphs().len() as u8,
+        ])?;
+
+        for chunk in sprite.bitmap().chunks(255) {
+            self.write(chunk)?;
+        }
+
+        Ok(())
+    }
+
+    pub fn delete_sprite(&mut self, sprite_id: SpriteId) -> Result<(), <L as i2c::Write>::Error> {
+        self.write(&[FxCommand::DeleteSprite as _, sprite_id])?;
+        self.write(&[sprite_id, b'd', b'e', b'l'])
+    }
+
+    fn write(&mut self, buf: &[u8]) -> Result<(), <L as i2c::Write>::Error> {
+        self.link.write(ADDR as _, buf)
     }
 }
 
