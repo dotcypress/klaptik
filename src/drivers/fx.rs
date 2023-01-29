@@ -2,11 +2,10 @@ use crate::*;
 use embedded_hal::blocking::i2c;
 
 pub enum FxCommand {
-    DisplayConfig = 0x00,
-    ReadRegister = 0x01,
-    UploadSprite = 0x80,
-    DeleteSprite = 0x81,
-    WriteRegister = 0xf0,
+    ReadRegister = 0x00,
+    WriteRegister = 0x80,
+    UploadSprite = 0x81,
+    DeleteSprite = 0x82,
 }
 
 pub struct FxDisplay<L, const ADDR: usize, const N: usize> {
@@ -29,15 +28,6 @@ impl<L, const ADDR: usize, const N: usize> FxDisplay<L, ADDR, N> {
 }
 
 impl<L: i2c::Write, const ADDR: usize, const N: usize> FxDisplay<L, ADDR, N> {
-    pub fn display_config(
-        &mut self,
-        on: bool,
-        backlight: u8,
-    ) -> Result<(), <L as i2c::Write>::Error> {
-        let payload = if on { backlight | 0x80 } else { backlight };
-        self.write(&[FxCommand::DisplayConfig as _, payload])
-    }
-
     pub fn write_register(&mut self, reg: u8, val: &[u8]) -> Result<(), <L as i2c::Write>::Error> {
         self.write(&[FxCommand::WriteRegister as _, reg])?;
         self.write(val)
