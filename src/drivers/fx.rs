@@ -10,12 +10,12 @@ pub enum FxCommand {
 
 pub struct FxDisplay<L, const ADDR: usize, const N: usize> {
     link: L,
-    glyph_map: [(SpriteId, Glyphs); N],
+    sprite_map: [(SpriteId, Glyphs); N],
 }
 
 impl<L, const ADDR: usize, const N: usize> FxDisplay<L, ADDR, N> {
-    pub const fn new(link: L, glyph_map: [(SpriteId, Glyphs); N]) -> Self {
-        Self { link, glyph_map }
+    pub const fn new(link: L, sprite_map: [(SpriteId, Glyphs); N]) -> Self {
+        Self { link, sprite_map }
     }
 
     pub fn link(&mut self) -> &mut L {
@@ -40,10 +40,10 @@ impl<L: i2c::Write, const ADDR: usize, const N: usize> FxDisplay<L, ADDR, N> {
             sprite.id(),
             sprite.size().width,
             sprite.size().height,
-            sprite.glyphs().len() as u8,
+            sprite.glyphs() as u8,
         ])?;
 
-        for chunk in sprite.bitmap().chunks(255) {
+        for chunk in sprite.raw().chunks(255) {
             self.write(chunk)?;
         }
 
@@ -75,7 +75,7 @@ impl<L: i2c::WriteRead, const ADDR: usize, const N: usize> FxDisplay<L, ADDR, N>
 impl<L: i2c::Write, const ADDR: usize, const N: usize> Display for FxDisplay<L, ADDR, N> {
     fn render(&mut self, req: RenderRequest) {
         let req = self
-            .glyph_map
+            .sprite_map
             .iter()
             .find(|(sprite_id, _)| req.sprite_id == *sprite_id)
             .and_then(|(_, glyphs)| glyphs.index(req.glyph))

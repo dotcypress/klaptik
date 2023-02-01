@@ -1,13 +1,13 @@
 use crate::*;
 
-pub struct SpriteDisplay<C: Canvas, const N: usize> {
+pub struct SpriteDisplay<C, const N: usize> {
     canvas: C,
-    sprites: [FlashSprite; N],
+    sprite_map: [(FlashSprite, Glyphs); N],
 }
 
-impl<C: Canvas, const N: usize> SpriteDisplay<C, N> {
-    pub const fn new(canvas: C, sprites: [FlashSprite; N]) -> Self {
-        Self { canvas, sprites }
+impl<C, const N: usize> SpriteDisplay<C, N> {
+    pub const fn new(canvas: C, sprite_map: [(FlashSprite, Glyphs); N]) -> Self {
+        Self { canvas, sprite_map }
     }
 
     pub fn canvas(&mut self) -> &mut C {
@@ -17,13 +17,12 @@ impl<C: Canvas, const N: usize> SpriteDisplay<C, N> {
 
 impl<C: Canvas, const N: usize> Display for SpriteDisplay<C, N> {
     fn render(&mut self, req: RenderRequest) {
-        if let Some(sprite) = self
-            .sprites
+        if let Some((sprite, glyphs)) = self
+            .sprite_map
             .iter()
-            .find(|sprite| sprite.id() == req.sprite_id)
+            .find(|(sprite, _)| sprite.id() == req.sprite_id)
         {
-            if let Some(bitmap) = sprite
-                .glyphs()
+            if let Some(bitmap) = glyphs
                 .index(req.glyph)
                 .and_then(|idx| sprite.glyph_bitmap(idx))
             {

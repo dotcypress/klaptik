@@ -15,6 +15,14 @@ pub use widgets::*;
 pub type Glyph = u8;
 pub type SpriteId = u8;
 
+pub trait Canvas {
+    fn draw(&mut self, bounds: Rectangle, bitmap: &[u8]);
+}
+
+pub trait Display {
+    fn render(&mut self, req: RenderRequest);
+}
+
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RenderRequest {
@@ -101,10 +109,28 @@ impl Rectangle {
     }
 }
 
-pub trait Canvas {
-    fn draw(&mut self, bounds: Rectangle, bitmap: &[u8]);
+pub enum Glyphs {
+    Single,
+    Sequential(u8),
+    Alphabet(&'static [Glyph]),
 }
 
-pub trait Display {
-    fn render(&mut self, req: RenderRequest);
+#[allow(clippy::len_without_is_empty)]
+impl Glyphs {
+    pub fn index(&self, glyph: Glyph) -> Option<usize> {
+        match self {
+            Glyphs::Single => Some(0),
+            Glyphs::Sequential(len) if glyph < *len => Some(glyph as _),
+            Glyphs::Alphabet(glyphs) => glyphs.iter().position(|g| *g == glyph),
+            _ => None,
+        }
+    }
+
+    pub const fn len(&self) -> usize {
+        match self {
+            Glyphs::Single => 1,
+            Glyphs::Sequential(len) => *len as usize,
+            Glyphs::Alphabet(glyphs) => glyphs.len(),
+        }
+    }
 }

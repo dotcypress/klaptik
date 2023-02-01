@@ -1,42 +1,16 @@
 use crate::*;
 
-pub enum Glyphs {
-    Single,
-    Sequential(u8),
-    Alphabet(&'static [Glyph]),
-}
-
-#[allow(clippy::len_without_is_empty)]
-impl Glyphs {
-    pub fn index(&self, glyph: Glyph) -> Option<usize> {
-        match self {
-            Glyphs::Single => Some(0),
-            Glyphs::Sequential(len) if glyph < *len => Some(glyph as _),
-            Glyphs::Alphabet(glyphs) => glyphs.iter().position(|g| *g == glyph),
-            _ => None,
-        }
-    }
-
-    pub const fn len(&self) -> usize {
-        match self {
-            Glyphs::Single => 1,
-            Glyphs::Sequential(len) => *len as usize,
-            Glyphs::Alphabet(glyphs) => glyphs.len(),
-        }
-    }
-}
-
 pub struct FlashSprite {
     id: SpriteId,
-    glyphs: Glyphs,
     size: Size,
+    glyphs: usize,
     glyph_len: usize,
     bitmap: &'static [u8],
 }
 
 impl FlashSprite {
-    pub const fn new(id: SpriteId, glyphs: Glyphs, size: Size, bitmap: &'static [u8]) -> Self {
-        let glyph_len = bitmap.len() / glyphs.len();
+    pub const fn new(id: SpriteId, glyphs: usize, size: Size, bitmap: &'static [u8]) -> Self {
+        let glyph_len = bitmap.len() / glyphs;
         Self {
             id,
             glyphs,
@@ -56,16 +30,16 @@ impl FlashSprite {
         self.size
     }
 
-    pub fn glyphs(&self) -> &Glyphs {
-        &self.glyphs
+    pub fn glyphs(&self) -> usize {
+        self.glyphs
     }
 
-    pub fn bitmap(&self) -> &[u8] {
+    pub fn raw(&self) -> &[u8] {
         self.bitmap
     }
 
     pub fn glyph_bitmap(&self, glyph_index: usize) -> Option<&[u8]> {
-        if glyph_index >= self.glyphs.len() {
+        if glyph_index >= self.glyphs {
             return None;
         }
         let offset = glyph_index * self.glyph_len;
