@@ -6,6 +6,7 @@ pub enum FxCommand {
     WriteRegister = 0x80,
     UploadSprite = 0x81,
     DeleteSprite = 0x82,
+    DeleteAllSprites = 0x83,
 }
 
 pub struct FxDisplay<L, const ADDR: usize, const N: usize> {
@@ -53,6 +54,11 @@ impl<L: i2c::Write, const ADDR: usize, const N: usize> FxDisplay<L, ADDR, N> {
     pub fn delete_sprite(&mut self, sprite_id: SpriteId) -> Result<(), <L as i2c::Write>::Error> {
         self.write(&[FxCommand::DeleteSprite as _, sprite_id])?;
         self.write(&[sprite_id, b'd', b'e', b'l'])
+    }
+
+    pub fn delete_all_sprites(&mut self) -> Result<(), <L as i2c::Write>::Error> {
+        self.write(&[FxCommand::DeleteAllSprites as _, 0])?;
+        self.write(&[b'd', b'e', b'l', b'a'])
     }
 
     fn write(&mut self, buf: &[u8]) -> Result<(), <L as i2c::Write>::Error> {
